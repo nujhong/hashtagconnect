@@ -1,0 +1,36 @@
+import { defineHandler } from "void";
+import { requireAuth } from "void/auth";
+import { db, eq } from "void/db";
+import { personStates, postStates } from "@schema";
+import { z } from "zod";
+import { listPosts, resolveTarget } from "../../src/server/discovery";
+
+const target = z.union([
+  z.object({ postId: z.string().regex(/^[1-9]\d{0,24}$/), choice: z.enum(["save", "skip"]).nullable() }).strict(),
+  z.object({ personId: z.string().uuid(), choice: z.enum(["save", "skip"]).nullable() }).strict(),
+]);
+
+export const POST = defineHandler.withValidator({ body: target })(async (c, { body }) => {
+  const user = requireAuth(c);
+  const resolved = await resolveTarget(user.id, body);
+  const updatedAt = Date.now();
+  if (resolved.personId) {
+    await db.insert(personStates).values({ userId: user.id, personId: resolved.personId, sourcePostId: resolved.postId, choice: body.choice, updatedAt })
+      .onConflictDoUpdate({ target: [personStates.userId, personStates.personId], set: {
+        choice: body.choice, updatedAt, ...("postId" in body ? { sourcePostId: resolved.postId } : {}),
+      } });
+  } else {
+    await db.insert(postStates).values({ userId: user.id, postId: resolved.postId!, choice: body.choice, updatedAt })
+      .onConflictDoUpdate({ target: [postStates.userId, postStates.postId], set: { choice: body.choice, updatedAt } });
+  }
+  return listPosts(user.id);
+});
+
+export const DELETE = defineHandler(async (c) => {
+  const user = requireAuth(c);
+  await db.batch([
+    db.delete(personStates).where(eq(personStates.userId, user.id)),
+    db.delete(postStates).where(eq(postStates.userId, user.id)),
+  ]);
+  return { ok: true };
+});

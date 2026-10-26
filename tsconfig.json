@@ -1,0 +1,27 @@
+{
+  "extends": "./.void/tsconfig.json",
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "allowImportingTsExtensions": true,
+    "types": ["void/env", "vite/client"],
+    "jsx": "react-jsx"
+  },
+  "include": [
+    "src",
+    "pages",
+    "routes",
+    "middleware",
+    "crons",
+    "queues",
+    "db",
+    "auth.ts",
+    "env.ts",
+    "void.config.ts",
+    "vite.config.ts"
+  ]
+}
