@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 
 type Widgets = {
   createTweet: (id: string, target: HTMLElement, options: { dnt: boolean; conversation: string; width: number; theme: string }) => Promise<HTMLElement | undefined>;
-  createTimeline: (source: { sourceType: "profile"; screenName: string }, target: HTMLElement, options: { dnt: boolean; width: number; height: number; theme: string }) => Promise<HTMLElement | undefined>;
 };
 declare global {
   interface Window { twttr?: { widgets: Widgets; ready: (callback: (api: { widgets: Widgets }) => void) => void } }
@@ -31,9 +30,9 @@ function loadWidgets(): Promise<Widgets> {
 }
 
 export type EmbedStatus = "off" | "loading" | "ready" | "unavailable";
-export type EmbedSource = { id: string; profile?: never } | { profile: string; id?: never };
 
-export function XEmbed({ id, profile, enabled, onEnable, onStatusChange }: EmbedSource & {
+export function XEmbed({ id, enabled, onEnable, onStatusChange }: {
+  id: string;
   enabled: boolean; onEnable: () => void; onStatusChange?: (status: EmbedStatus) => void;
 }) {
   const host = useRef<HTMLDivElement>(null);
@@ -53,14 +52,12 @@ export function XEmbed({ id, profile, enabled, onEnable, onStatusChange }: Embed
     loadWidgets().then((widgets) => {
       if (cancelled) return;
       const theme = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-      return profile !== undefined
-        ? widgets.createTimeline({ sourceType: "profile", screenName: profile }, mount, { dnt: true, width: 520, height: 640, theme })
-        : widgets.createTweet(id, mount, { dnt: true, conversation: "none", width: 550, theme });
+      return widgets.createTweet(id, mount, { dnt: true, conversation: "none", width: 550, theme });
     }).then((element) => {
       if (!cancelled) { window.clearTimeout(timeout); setStatus(element ? "ready" : "unavailable"); }
     }).catch(unavailable);
     return () => { cancelled = true; window.clearTimeout(timeout); mount.remove(); };
-  }, [id, profile, enabled, attempt]);
+  }, [id, enabled, attempt]);
 
   return <div className="embed-shell">
     {!enabled ? <div className="embed-placeholder">
@@ -71,7 +68,7 @@ export function XEmbed({ id, profile, enabled, onEnable, onStatusChange }: Embed
       <a href="https://x.com/en/privacy" target="_blank" rel="noreferrer">X privacy policy ↗</a>
     </div> : status !== "ready" && <div className={`embed-placeholder ${status}`} role="status">
       <span className="embed-symbol" aria-hidden="true">𝕏</span>
-      <h3>{status === "loading" ? profile !== undefined ? "Loading profile posts…" : "Loading invitation…" : profile !== undefined ? "X couldn’t load this timeline." : "X couldn’t load this post."}</h3>
+      <h3>{status === "loading" ? "Loading invitation…" : "X couldn’t load this post."}</h3>
       {status === "unavailable" && <button className="link" onClick={() => setAttempt((n) => n + 1)}>Try again</button>}
     </div>}
     <div ref={host} className="x-embed" />

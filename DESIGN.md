@@ -40,7 +40,7 @@ Tokens are CSS custom properties in `pages/style.css`. Slab elements redefine th
 - On phones, the scan stays inline above the post. It never opens a sheet, steals focus or scrolls automatically.
 - Stash ends in X: one **Open N tabs** action opens the remaining profile links together, with post links for unconfirmed authors. Successful openings leave the saved people in Stash; blocked tabs remain unopened. Individual links remain available.
 - **The embed is X's, not ours.** It renders through X's official widget, whole: never cropped, scaled, re-typeset, covered or used as a gesture target. Our rounded `PostFrame` container centres it with a stable minimum height, and taller posts simply grow it. Loading, error and consent states sit on that container.
-- **Invitation / Profile posts** switches the reading area when the curator has confirmed the author. Both widgets stay mounted once opened; the timeline loads on demand through X's official profile widget. Switching views must not reload either widget. Its height comes from X's native option. Profile posts are for browsing and do not change the scan's inputs. The profile link remains available when X cannot render its timeline.
+- The scan and its original invitation remain visible together. Profile history is absent from the app for now: no tabs, secondary timeline or collapsed history section. Standalone embed fixtures remain available for diagnosis.
 - This MVP never rebuilds post or profile content from embed data. Stash shows a person as their handle, a profile link and, on request, their real post. Future components built on approved API data (for example profile details) are welcome if they follow X's display requirements: author identity shown, text unmodified.
 
 ## Components

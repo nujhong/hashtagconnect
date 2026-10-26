@@ -119,12 +119,6 @@ code { font: 12px var(--mono); padding: 1px 5px; border-radius: 5px; background:
 .post-shell { height: 420px; border-radius: 24px; background: var(--panel); }
 .post-note { margin-top: 12px; color: var(--faint); font-size: 12.5px; }
 .post-note b { color: var(--ink); font-weight: 600; margin-right: 4px; }
-.evidence-views { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 20px; margin-bottom: 14px; border-bottom: 1px solid var(--line); }
-.evidence-views button { position: relative; padding: 10px 0 12px; border: 0; background: none; color: var(--muted); font: 700 15px var(--display); }
-.evidence-views button::after { position: absolute; right: 0; bottom: -1px; left: 0; height: 3px; background: var(--ink); content: ""; transform: scaleX(0); transition: transform 0.16s ease-out; }
-.evidence-views button[aria-pressed="true"] { color: var(--ink); }
-.evidence-views button[aria-pressed="true"]::after { transform: scaleX(1); }
-.evidence-author { margin-left: auto; padding: 8px 0; color: var(--muted); font-size: 12px; }
 .back { padding: 6px 14px; border: 2px solid var(--ink); border-radius: 999px; background: var(--surface); font: 700 14px var(--display); }
 
 /* Official embed shell (src/x-embed.tsx). The outer frame clips to X's own 12px card radius, so the
@@ -143,7 +137,6 @@ code { font: 12px var(--mono); padding: 1px 5px; border-radius: 5px; background:
 /* The mount div needs a definite width before X measures it; flex centering let it shrink to ~250px. */
 .x-embed > div { width: 100%; max-width: 550px; margin: 0 auto; }
 .x-embed .twitter-tweet { margin: 0 !important; }
-.x-embed .twitter-timeline { margin: 0 auto !important; }
 .embed-placeholder { display: grid; justify-items: center; gap: 10px; padding: 48px 24px; text-align: center; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); }
 .embed-placeholder h3 { margin: 4px 0 0; font: 700 24px/1.1 var(--display); letter-spacing: -0.03em; }
 .embed-placeholder p { max-width: 36ch; color: var(--muted); font-size: 13px; }
