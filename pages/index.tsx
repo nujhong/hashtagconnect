@@ -221,20 +221,7 @@ function App(props: Props) {
       say(`Opened ${opened.length} ${opened.length === 1 ? "tab" : "tabs"}.${blocked ? ` ${blocked} blocked. Allow pop-ups for this site, or use the individual links.` : ""}${failed ? ` Couldn’t save ${failed} to your opened history.` : ""}`);
     });
   }
-  /** Curator-only: corrects a person's confirmed profile link. */
-  async function fixProfile(person: Person, input: string): Promise<string | null> {
-    const profile = profileFromInput(input);
-    if (!profile) return "Use @handle or an https://x.com/handle link.";
-    let failure: string | null = null;
-    await run(async () => {
-      try {
-        if (preview) setPosts((rows) => rows.map((r) => r.person?.id === person.id ? { ...r, person: { ...person, ...profile } } : r));
-        else apply(await api("/api/people", { method: "PATCH", body: { personId: person.id, profileUrl: input } }));
-        say(`Profile link updated to @${profile.handle}.`);
-      } catch (error) { failure = errorMessage(error); }
-    });
-    return failure;
-  }
+  /** The curator confirms the author’s profile when publishing a post to the pool. */
   async function add(url: string, shared: boolean, picked: string[], author: string): Promise<string | null> {
     const parsed = postFromUrl(url);
     if (!parsed) return "Paste an HTTPS post link from x.com or twitter.com.";
@@ -365,7 +352,7 @@ function App(props: Props) {
         lists={lists} list={list} onList={setList} focusId={focusId} tags={tags} embeds={embeds} busy={pending}
         curator={canCurate} preview={preview} tagNames={tagNames} onEnable={() => setConsent(true)}
         unopenedCount={unopened.length} onOpenAll={openStash}
-        onOpen={markOpened} onView={show} onFix={fixProfile} onMove={moveEntry} onAdd={add} />
+        onOpen={markOpened} onView={show} onMove={moveEntry} onAdd={add} />
     </div>
 
     <footer className="foot">

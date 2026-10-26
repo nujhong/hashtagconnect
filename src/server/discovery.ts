@@ -91,7 +91,7 @@ export async function importPost(userId: string, url: string, shared: boolean, a
       if (!author.confirmed || !profile) throw new HTTPException(400, { message: "Confirm the author's X profile link before publishing." });
       if (personId) {
         const [current] = await db.select(personFields).from(people).where(eq(people.id, personId));
-        if (current?.profileUrl !== profile.profileUrl) throw new HTTPException(409, { message: "This post already has a confirmed author. Edit their profile link instead." });
+        if (current?.profileUrl !== profile.profileUrl) throw new HTTPException(409, { message: "This post already has a confirmed author. Use the confirmed profile for this post." });
       } else {
         const [person] = await db.insert(people).values({
           id: crypto.randomUUID(), ...profile, confirmedBy: userId, updatedAt: addedAt,
@@ -134,16 +134,5 @@ export async function importPost(userId: string, url: string, shared: boolean, a
       ]);
     }
   }
-  return listPosts(userId);
-}
-
-export async function updatePerson(userId: string, personId: string, input: string) {
-  const profile = profileFromInput(input);
-  if (!profile) throw new HTTPException(400, { message: "Enter an X profile URL or @handle." });
-  const [duplicate] = await db.select({ id: people.id }).from(people).where(eq(people.profileUrl, profile.profileUrl));
-  if (duplicate && duplicate.id !== personId) throw new HTTPException(409, { message: "That profile already belongs to another person in the pool." });
-  const changed = await db.update(people).set({ ...profile, confirmedBy: userId, updatedAt: Date.now() })
-    .where(eq(people.id, personId)).returning({ id: people.id });
-  if (!changed.length) throw new HTTPException(404, { message: "That person no longer exists." });
   return listPosts(userId);
 }

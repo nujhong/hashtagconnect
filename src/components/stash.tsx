@@ -18,7 +18,7 @@ const shortId = (id: string) => `…${id.slice(-6)}`;
 type RowActions = {
   tags: Tags; embeds: boolean; busy: boolean; curator: boolean; focusId: string | null; onEnable: () => void;
   onOpen: (t: { post?: Post; person?: Person }) => void; onView: (p: Post) => void;
-  onFix: (person: Person, input: string) => Promise<string | null>; onMove: (entry: StashEntry, choice: Choice | null) => void;
+  onMove: (entry: StashEntry, choice: Choice | null) => void;
 };
 
 /**
@@ -27,9 +27,8 @@ type RowActions = {
  * toast can render inside while it's open.
  *
  * Its job is one list: people you kept, each a big link to their profile on X, with one action to open
- * the remaining links together. Everything else (their
- * post, remove, the curator's link fix) sits behind each row's "More". Posts without a confirmed author,
- * people you passed, and adding by link live in quieter sections below the list.
+ * the remaining links together. View post and Remove sit behind each row's "More". Posts without a
+ * confirmed author, people you passed, and adding by link live in quieter sections below the list.
  */
 export function Stash({ dialogRef, open, onClose, browserOnly, lists, list, onList, preview, tagNames, onAdd, unopenedCount, onOpenAll, ...row }: {
   dialogRef: RefObject<HTMLDialogElement | null>; open: boolean; onClose: () => void; browserOnly: boolean;
@@ -67,7 +66,7 @@ export function Stash({ dialogRef, open, onClose, browserOnly, lists, list, onLi
       <p>All unopened profiles and saved post links. Your browser may ask you to allow pop-ups.</p>
     </div>}
 
-    {/* People first; the post you found them through is secondary and loads only on request. */}
+    {/* People first; View post returns to the original invitation without a duplicate embed in Stash. */}
     {open && <ul className="people-list">
       <AnimatePresence initial={false}>
         {shown.map((entry) => <motion.li key={entry.key} layout initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96 }} transition={spring}>
@@ -93,17 +92,12 @@ export function Stash({ dialogRef, open, onClose, browserOnly, lists, list, onLi
 
 /**
  * A Stash row. A curator-confirmed person is one big link to their profile on X (our own link, so it's
- * recorded as opened); the post you found them through stays secondary and loads its official embed
- * only when asked. A post whose author isn't linked yet shows that post instead, since it's the only
- * honest way to see who it is. Secondary actions live behind "More" so the list stays a list of people.
+ * recorded as opened); View post returns to the main view for the original invitation. A post whose
+ * author isn't linked yet shows that post instead, since it's the only honest way to see who it is. Secondary actions live behind "More" so the list stays a list of people.
  */
-function PersonRow({ entry, tags, embeds, busy, curator, focusId, onEnable, onOpen, onView, onFix, onMove }: { entry: StashEntry } & RowActions) {
+function PersonRow({ entry, tags, embeds, busy, focusId, onEnable, onOpen, onView, onMove }: { entry: StashEntry } & RowActions) {
   const { person, source } = entry;
   const [more, setMore] = useState(false);
-  const [post, setPost] = useState(!person);
-  const [fixing, setFixing] = useState(false);
-  const [fix, setFix] = useState("");
-  const [fixError, setFixError] = useState("");
   const topics = source ? tags[source.id] ?? [] : [];
   // The row's status line answers "have I opened them yet?"; curator confirmation is stated once in the header.
   const meta = [entry.openedAt ? `Opened ${timeAgo(entry.openedAt)}` : person ? "Not opened yet" : source ? `Post ${shortId(source.id)}` : "",
@@ -122,35 +116,18 @@ function PersonRow({ entry, tags, embeds, busy, curator, focusId, onEnable, onOp
             <span className="person-tile" aria-hidden="true">#</span>
             <span className="person-id"><b>{label}</b><small>{meta}</small></span>
           </div>}
-      {/* Closing More returns the row to its simple form: any link fix and a person's post fold away too.
-          An unlinked post stays shown, since it's the only way to tell who that row is. */}
-      <button className="person-more" aria-expanded={more} aria-label={`More for ${label}`} onClick={() => {
-        if (more) { setFixing(false); setFixError(""); if (person) setPost(false); }
-        setMore(!more);
-      }}>⋯</button>
+      {/* More reveals the secondary actions; an unlinked post stays shown so its author can be seen. */}
+      <button className="person-more" aria-expanded={more} aria-label={`More for ${label}`} onClick={() => setMore(!more)}>⋯</button>
     </div>
     {more && <div className="person-tray">
       {entry.choice === "skip"
         ? <button className="btn primary sm" disabled={busy} onClick={() => onMove(entry, null)}>Bring back</button>
         : null}
-      {person && source && <button className="btn sm" aria-expanded={post} onClick={() => setPost(!post)}>{post ? "Hide their post" : "Their post"}</button>}
-      {source && <button className="btn sm" onClick={() => onView(source)}>View in workspace</button>}
-      {curator && person && <button className="btn sm" aria-expanded={fixing} onClick={() => { setFixing(!fixing); setFix(`@${person.handle}`); setFixError(""); }}>Fix profile link</button>}
+      {source && <button className="btn sm" onClick={() => onView(source)}>View post</button>}
       {entry.choice === "save" && <button className="btn sm quiet danger" disabled={busy} onClick={() => onMove(entry, null)}>Remove</button>}
     </div>}
     {person && !source && more && <p className="person-note">The post you found them through has left the pool.</p>}
-    {fixing && person && <form className="person-fix" onSubmit={async (e) => {
-      e.preventDefault();
-      const failure = await onFix(person, fix);
-      setFixError(failure ?? "");
-      if (!failure) setFixing(false);
-    }}>
-      <label className="sr" htmlFor={`fix-${person.id}`}>Profile for {person.handle}</label>
-      <input id={`fix-${person.id}`} value={fix} maxLength={200} onChange={(e) => { setFix(e.target.value); setFixError(""); }} aria-invalid={Boolean(fixError)} />
-      <button className="btn primary sm" disabled={busy}>Save</button>
-      {fixError && <p className="error" role="alert">{fixError}</p>}
-    </form>}
-    {post && source && <div className="person-posts">
+    {!person && source && <div className="person-posts">
       <PostFrame id={source.id} embeds={embeds} onEnable={onEnable} fallback={<OpenLink post={source} onOpen={(p) => onOpen({ post: p })} className="btn sm" />} />
     </div>}
   </div>;

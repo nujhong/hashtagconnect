@@ -458,20 +458,17 @@ a.person-open:hover { background: var(--sunk); }
 .person-go { flex: none; color: var(--hot-text); font: 700 14px var(--display); }
 .person-more { flex: none; width: 40px; height: 40px; border: none; border-radius: 12px; background: none; color: var(--muted); font-size: 20px; line-height: 1; }
 .person-more:hover, .person-more[aria-expanded="true"] { background: var(--sunk); color: var(--ink); }
-.person-tray, .person-note, .person-fix { padding: 0 10px 8px 62px; }
+.person-tray, .person-note { padding: 0 10px 8px 62px; }
 .person-tray { display: flex; flex-wrap: wrap; gap: 8px; }
 .person-posts { display: grid; gap: 8px; padding: 0 4px 4px; }
-.person-fix { display: flex; flex-wrap: wrap; gap: 8px; }
-.person-fix input, .add-author input { flex: 1; min-width: 0; height: 36px; padding: 0 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--bg); color: var(--ink); font-size: 13.5px; }
-.person-fix input[aria-invalid="true"] { border-color: var(--danger); }
-.person-fix .error { width: 100%; color: var(--danger); font-size: 12.5px; }
+.add-author input { flex: 1; min-width: 0; height: 36px; padding: 0 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--bg); color: var(--ink); font-size: 13.5px; }
 .add-author { display: grid; gap: 6px; }
 .add-author .check { display: flex; gap: 8px; align-items: flex-start; color: var(--muted); font: 400 13px var(--sans); }
 /* Phones: the row keeps only the ↗ glyph, and the tray uses the full width. After the person rules so it wins. */
 @media (max-width: 520px) {
   .person-go { font-size: 0; }
   .person-go span { font-size: 18px; }
-  .person-tray, .person-note, .person-fix { padding-left: 10px; }
+  .person-tray, .person-note { padding-left: 10px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
