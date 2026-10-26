@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>X embed fixture</title>
+<style>
+  body { font: 16px/1.5 system-ui, sans-serif; margin: 24px; }
+  form { display: flex; flex-wrap: wrap; align-items: end; gap: 12px; }
+  label { display: grid; gap: 4px; }
+  input, select, button { font: inherit; padding: 6px; }
+  input { width: min(420px, 75vw); }
+  #status { display: block; margin: 20px 0; }
+  nav { margin: 16px 0; }
+</style>
+<h1>X embed fixture</h1>
+<p>One profile or post at a time. Copy this page’s URL into another browser to repeat the same test.</p>
+<form method="get">
+  <label>X profile or post URL
+    <input name="url" type="url" required value="https://x.com/kunalsahu20_">
+  </label>
+  <label>Embedding method
+    <select name="method">
+      <option value="publish">Publish HTML markup</option>
+      <option value="factory">JavaScript factory</option>
+    </select>
+  </label>
+  <button>Load embed</button>
+</form>
+<nav>Bare baselines: <a href="timeline-publish.html">Publish timeline</a> · <a href="timeline-factory.html">Factory timeline</a></nav>
+<output id="status" role="status">Choose a URL and load an embed. No X script has loaded yet.</output>
+<div id="embed"></div>
+<script>
+  const params = new URLSearchParams(location.search);
+  const form = document.querySelector('form');
+  const status = document.getElementById('status');
+  const target = document.getElementById('embed');
+  const method = params.get('method') || 'publish';
+  const rawUrl = params.get('url');
+  if (rawUrl) {
+    form.elements.url.value = rawUrl;
+    form.elements.method.value = method;
+    try {
+      const url = new URL(rawUrl);
+      if (url.protocol !== 'https:' || !['x.com', 'www.x.com', 'twitter.com', 'www.twitter.com'].includes(url.hostname)) {
+        throw new Error('Use an HTTPS profile or post URL on x.com or twitter.com.');
+      }
+      const profile = url.pathname.match(/^\/([A-Za-z0-9_]{1,15})\/?$/);
+      const post = url.pathname.match(/^\/(?:[A-Za-z0-9_]{1,15}|i|i\/web)\/status\/([1-9][0-9]{0,24})\/?$/);
+      if (!profile && !post) throw new Error('Use a profile URL or a single-post URL.');
+      if (!['publish', 'factory'].includes(method)) throw new Error('Choose Publish markup or JavaScript factory.');
+      const link = document.createElement('a');
+      link.href = 'https://x.com' + url.pathname + '?ref_src=twsrc%5Etfw';
+      link.textContent = profile ? 'Posts by ' + profile[1] : 'View post on X';
+      if (method === 'publish') {
+        if (profile) {
+          link.className = 'twitter-timeline';
+          target.append(link);
+        } else {
+          const quote = document.createElement('blockquote');
+          quote.className = 'twitter-tweet';
+          quote.append(link);
+          target.append(quote);
+        }
+      }
+      status.textContent = 'Loading X’s widget script…';
+      const script = document.createElement('script');
+      script.src = 'https://platform.x.com/widgets.js';
+      script.async = true;
+      script.charset = 'utf-8';
+      script.onerror = () => { status.textContent = 'X’s widget script could not load. Check this browser’s Network panel.'; };
+      script.onload = () => {
+        if (method === 'publish') {
+          status.textContent = 'Widget script loaded. X controls the embed below; a plain link alone is not a rendered timeline.';
+          return;
+        }
+        twttr.ready(async (api) => {
+          status.textContent = 'SDK ready; waiting for the factory to return…';
+          const timer = setTimeout(() => {
+            status.textContent = 'The factory is still pending after 20 seconds. This page will not retry or remove the widget.';
+          }, 20000);
+          try {
+            const element = profile
+              ? await api.widgets.createTimeline({ sourceType: 'profile', screenName: profile[1] }, target)
+              : await api.widgets.createTweet(post[1], target);
+            status.textContent = element ? 'Factory returned a widget. Inspect the content below.' : 'Factory returned no widget.';
+          } catch (error) {
+            status.textContent = 'Factory error: ' + error.message;
+          } finally {
+            clearTimeout(timer);
+          }
+        });
+      };
+      document.head.append(script);
+    } catch (error) {
+      status.textContent = error.message;
+    }
+  }
+</script>
+</html>

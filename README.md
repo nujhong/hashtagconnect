@@ -51,6 +51,10 @@ X sign-in: create a confidential Web App in the X Developer Console with the cal
 
 The current local OAuth setup has been tested with a real sign-in. The bio is collected in the same `/2/users/me` profile lookup and refreshed on subsequent sign-ins. Existing sessions without a captured bio offer *Refresh X bio*; an account with an empty X bio gets a separate explanation. Profile edits through Better Auth's `/update-user` endpoint are disabled. Curator authorization and scans use Better Auth's trusted provider account ID. For scans, configure the Cloudflare account, gateway and inference credentials from `env.example`; no X bearer token is needed. Scans are uncapped by the app when SCAN_DAILY_LIMIT is omitted. A positive value caps attempts per UTC day across all users; zero pauses model calls. Provider limits still apply. Gateway request logging is enabled; model-response caching stays off.
 
+## Embed fixtures
+
+For isolated browser comparisons, see [the standalone fixtures](fixtures/embeds/README.md). They include a URL-driven profile/post tester and bare Publish/factory HTML baselines, served independently of the app.
+
 ## API
 
 | Route | Purpose |

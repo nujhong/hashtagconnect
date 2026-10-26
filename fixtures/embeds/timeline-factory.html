@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Factory timeline — bare baseline</title>
+<div id="timeline"></div>
+<script>
+  function createTimeline() {
+    twttr.ready((api) => {
+      api.widgets.createTimeline(
+        { sourceType: 'profile', screenName: 'kunalsahu20_' },
+        document.getElementById('timeline')
+      );
+    });
+  }
+</script>
+<script async src="https://platform.x.com/widgets.js" charset="utf-8" onload="createTimeline()"></script>
+</html>
