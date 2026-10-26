@@ -130,6 +130,11 @@ code { font: 12px var(--mono); padding: 1px 5px; border-radius: 5px; background:
    so X's mount keeps a definite width. Taller posts just grow the container; nothing is cropped.
    Defined before the media queries so the phone overrides win the cascade. */
 .post-frame { display: grid; align-content: center; min-height: 420px; padding: 20px; border-radius: 24px; background: var(--panel); }
+.post-frame:has(.post-frame-head) { align-content: stretch; grid-template-rows: auto 1fr; gap: 16px; }
+.post-frame > .embed-frame { align-self: center; }
+.post-frame-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; color: var(--ink); }
+.post-frame-head strong { font: 800 18px/1.2 var(--display); overflow-wrap: anywhere; }
+.member-badge { padding: 4px 7px; border: 1px solid var(--line); border-radius: 6px; color: var(--muted); font-size: 11px; line-height: 1.2; }
 /* Loading, error and consent states sit directly on the container rather than as a second card. */
 .post-frame .embed-placeholder { background: none; border: none; }
 .person .post-frame { min-height: 260px; padding: 12px; border-radius: 18px; }
@@ -166,8 +171,7 @@ code { font: 12px var(--mono); padding: 1px 5px; border-radius: 5px; background:
 .post-analysis { animation: scan-in 0.24s ease-out; }
 .scan-heading { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 16px; margin-bottom: 16px; }
 .scan-label { display: flex; align-items: center; gap: 8px; font: 700 13px var(--sans); }
-.scan-usage { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 11.5px; line-height: 1.3; }
-.scan-usage span + span { padding-left: 10px; border-left: 1px solid var(--line); }
+.scan-usage { max-width: 120px; color: var(--muted); font-size: 12px; line-height: 1.3; text-align: right; }
 @keyframes scan-in { from { opacity: 0; translate: 0 8px; } }
 
 /* Big tactile decisions */
@@ -193,7 +197,7 @@ code { font: 12px var(--mono); padding: 1px 5px; border-radius: 5px; background:
 .scan-glyph { position: relative; width: 18px; height: 18px; border: 2px solid currentColor; border-radius: 50%; }
 .scan-glyph::after { content: ""; position: absolute; inset: 3px; border-radius: 50%; background: var(--scan); }
 .scan { display: grid; }
-.scan-step { display: grid; gap: 12px; justify-items: start; }
+.scan-step { width: 100%; display: grid; gap: 12px; justify-items: start; }
 .scan-step > .big { width: auto; min-width: 220px; }
 .scan-title { font: 800 36px/0.98 var(--display); letter-spacing: -0.045em; }
 .modal .scan-title { margin: 0; }
@@ -210,6 +214,8 @@ code { font: 12px var(--mono); padding: 1px 5px; border-radius: 5px; background:
 .radar span:nth-child(2) { inset: 14px; opacity: 0.55; }
 .radar span:nth-child(3) { inset: 30px; background: var(--scan); }
 .radar b { position: absolute; inset: 0; border-radius: 50%; background: conic-gradient(from 0deg, transparent 0 270deg, color-mix(in srgb, var(--scan) 65%, transparent) 360deg); }
+.scan-result { display: grid; grid-template-columns: minmax(0, 1fr) minmax(240px, 0.85fr); align-items: center; gap: 48px; width: 100%; }
+.scan-overall { display: grid; gap: 18px; }
 .scan-rating { display: flex; align-items: center; flex-wrap: wrap; gap: 12px 24px; width: 100%; }
 .scan-score, .modal .scan-score { display: flex; align-items: baseline; gap: 8px; margin: 0; color: var(--scan-text); font: 800 clamp(68px, 7vw, 88px)/0.95 var(--display); letter-spacing: -0.06em; }
 .scan-score span { font-size: 24px; letter-spacing: -0.025em; color: var(--muted); }
@@ -218,10 +224,10 @@ code { font: 12px var(--mono); padding: 1px 5px; border-radius: 5px; background:
 .scan-tentative { color: var(--muted); font: 600 13px var(--sans); }
 .scan-meter { width: 100%; height: 5px; overflow: hidden; border-radius: 3px; background: var(--line); }
 .scan-meter > div { height: 100%; background: var(--scan); }
-.scan-signals { display: grid; grid-template-columns: 1fr 1fr; width: 100%; margin: 4px 0 0; }
-.scan-signals > div { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 20px 10px 0; }
-.scan-signals > div + div { border-left: 1px solid var(--line); padding: 10px 0 10px 20px; }
-.scan-signals dt { max-width: 10ch; color: var(--muted); font: 500 13px/1.35 var(--sans); }
+.scan-signals { display: grid; width: 100%; margin: 0; }
+.scan-signals > div { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 0; }
+.scan-signals > div + div { border-top: 1px solid var(--line); }
+.scan-signals dt { color: var(--muted); font: 500 15px/1.35 var(--sans); }
 .scan-signals dd { margin: 0; white-space: nowrap; color: var(--ink); font: 800 30px/1 var(--display); letter-spacing: -0.035em; }
 .scan-signals dd span { margin-left: 2px; font-size: 15px; color: var(--muted); }
 .scan-quotes { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
@@ -368,6 +374,9 @@ code { font: 12px var(--mono); padding: 1px 5px; border-radius: 5px; background:
 .settings-info { margin: 4px 0 24px; }
 
 /* Phones and narrow windows: scan and post inline, decisions pinned to the bottom */
+@media (max-width: 650px) {
+  .scan-result { grid-template-columns: 1fr; gap: 20px; }
+}
 @media (max-width: 899px) {
   .top { height: 56px; padding: 0 16px; gap: 8px; }
   .layout { padding: 4px 16px 24px; }
@@ -404,6 +413,8 @@ code { font: 12px var(--mono); padding: 1px 5px; border-radius: 5px; background:
   .top { gap: 4px; }
   .brand { gap: 6px; font-size: 18px; }
   .scope { padding: 2px 7px; font-size: 11px; }
+  .top:has(.scan-usage) .scope { display: none; }
+  .scan-usage { max-width: 80px; font-size: 11px; }
   .top-cta { padding: 0 11px; }
   .mark { width: 28px; height: 28px; font-size: 19px; border-radius: 9px; }
   .top-cta { height: 38px; font-size: 14px; }

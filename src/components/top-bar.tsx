@@ -1,18 +1,23 @@
+import type { ScanAvailability } from "../scan-contract";
 import { AccountMenu, type Account } from "./auth";
 import { Count, Keycap, Mark, StashIcon } from "./ui";
 
 /**
- * Brand, session scope, the Stash counter (also the target the Keep sticker flies to, via data-jack),
+ * Brand, session scope, the configured scan allowance, the Stash counter (also the target the Keep sticker flies to, via data-jack),
  * and either the account menu or Continue with X.
  */
-export function TopBar({ scope, preview, stashCount, stashOpen, letters, account, onStash, onSettings, onSignIn, onSignOut }: {
+export function TopBar({ scope, preview, stashCount, stashOpen, letters, account, scanPolicy, scanPause, onStash, onSettings, onSignIn, onSignOut }: {
   scope: string | null; preview: boolean; stashCount: number; stashOpen: boolean; letters: boolean; account: Account | null;
+  scanPolicy: ScanAvailability | null; scanPause: string | null;
   onStash: () => void; onSettings: () => void; onSignIn: () => void; onSignOut: () => Promise<void>;
 }) {
   return <header className="top">
     <a href="/" className="brand" aria-label="hashtagconnect home"><Mark /><span className="brand-name"><span className="brand-pre">hashtag</span>connect</span></a>
     {scope && <span className={`scope${preview ? " is-preview" : ""}`} title={preview ? "Saves stay in this browser. No account data is used." : undefined}>{scope}</span>}
     <span className="top-gap" />
+    {scanPolicy?.status === "ready" && <span className="scan-usage" title={scanPause ?? (scanPolicy.dailyLimit === null ? "No app daily limit. Provider limits still apply." : "Configured daily limit shared across the service; this is not a remaining balance.")}>
+      {scanPause ? "Scans paused" : scanPolicy.dailyLimit === null ? "Unlimited scans" : `${scanPolicy.dailyLimit}/day shared`}
+    </span>}
     <button className="kept-btn" data-jack onClick={onStash} aria-expanded={stashOpen} aria-controls="shelf" aria-keyshortcuts={letters ? "S" : undefined}>
       <StashIcon /><span className="kept-label">Stash</span> <Count value={stashCount} />{letters && <Keycap k="S" hint />}
     </button>

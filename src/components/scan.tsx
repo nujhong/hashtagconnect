@@ -11,7 +11,7 @@ import { scheduleScan } from "../auto-scan";
  * which uses fictional data and is never attached to the real author of the post beside it.
  * Results compare the OAuth bio with one connect post, show their sources, and state the unknowns:
  * a text-relevance rating, not relationship compatibility or a human/bot verdict.
- * Scans run automatically for the current post, inline above its embed on every screen size.
+ * Scans run automatically for the current post, in a full-width row above the invitation and decisions.
  * Leaving cancels the pending client request; revisiting starts fresh. Service failures pause
  * automatic scanning across posts until the user retries. Results are not cached.
  */
@@ -72,7 +72,6 @@ export function ScanPanel({ access, availability, postId, pausedReason, onPause,
   return <section id="bio-scan" className="post-analysis" aria-label="Bio scan">
     <header className="scan-heading">
       <p className="scan-label"><span className="scan-glyph" aria-hidden="true" />Bio scan</p>
-      {canScan && <div className="scan-usage"><span>{pausedReason ? "Paused" : "Auto"}</span>{availability.status === "ready" && <span>{availability.dailyLimit === null ? "No daily cap" : `${availability.dailyLimit}/day shared limit`}</span>}</div>}
     </header>
     <div className="scan">
     <AnimatePresence mode="wait" initial={false}>
@@ -131,15 +130,19 @@ function Result({ result, demo, onSignIn }: { result: ScanResult; demo: boolean;
     <p className="scan-lede">{result.reason}</p>
   </>;
   return <>
-    <motion.div className="scan-rating" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={spring}>
-      <h2 className="scan-score" aria-label={`${result.relevance} out of 100. Relevance to you.`}>{result.relevance}<span aria-hidden="true">/100</span></h2>
-      <div className="scan-rating-copy"><p>Relevance to you</p>{result.tentative && <span className="scan-tentative">Tentative</span>}</div>
-    </motion.div>
-    <div className="scan-meter" aria-hidden="true"><motion.div initial={reduced ? false : { width: 0 }} animate={{ width: `${result.relevance}%` }} transition={{ duration: reduced ? 0 : 0.35, ease: "easeOut" }} /></div>
-    <dl className="scan-signals" aria-label="Supporting signals">
-      <div><dt>Shared interests</dt><dd>{Math.round(result.signals.sharedInterest * 100)}<span>%</span></dd></div>
-      <div><dt>Related work</dt><dd>{Math.round(result.signals.relatedWork * 100)}<span>%</span></dd></div>
-    </dl>
+    <div className="scan-result">
+      <div className="scan-overall">
+        <motion.div className="scan-rating" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={spring}>
+          <h2 className="scan-score" aria-label={`${result.relevance} out of 100. Relevance to you.`}>{result.relevance}<span aria-hidden="true">/100</span></h2>
+          <div className="scan-rating-copy"><p>Relevance to you</p>{result.tentative && <span className="scan-tentative">Tentative</span>}</div>
+        </motion.div>
+        <div className="scan-meter" aria-hidden="true"><motion.div initial={reduced ? false : { width: 0 }} animate={{ width: `${result.relevance}%` }} transition={{ duration: reduced ? 0 : 0.35, ease: "easeOut" }} /></div>
+      </div>
+      <dl className="scan-signals" aria-label="Supporting signals">
+        <div><dt>Interests in common</dt><dd>{Math.round(result.signals.sharedInterest * 100)}<span>%</span></dd></div>
+        <div><dt>Related work</dt><dd>{Math.round(result.signals.relatedWork * 100)}<span>%</span></dd></div>
+      </dl>
+    </div>
     <details className="scan-evidence">
       <summary>Sources</summary>
       {demo

@@ -6,6 +6,7 @@ import { HTTPException } from "hono/http-exception";
 import { z } from "zod";
 import { postFromUrl, profileFromInput, type Discovery } from "../people";
 import { xAccountId } from "./x-identity";
+import { platformMembership } from "./membership";
 
 const personFields = { id: people.id, handle: people.handle, profileUrl: people.profileUrl };
 export const stateTarget = z.union([
@@ -24,7 +25,7 @@ export async function requireCurator(user: AuthUser) {
 
 export async function listPosts(userId: string): Promise<Discovery> {
   const rows = await db.select({
-    post: posts, person: personFields,
+    post: posts, person: personFields, onPlatform: platformMembership(sql`${people.handle}`),
     postChoice: postStates.choice, postOpenedAt: postStates.openedAt,
     personUser: personStates.userId, personChoice: personStates.choice, personOpenedAt: personStates.openedAt,
   }).from(posts)
@@ -33,22 +34,25 @@ export async function listPosts(userId: string): Promise<Discovery> {
     .leftJoin(personStates, and(eq(personStates.userId, userId), eq(personStates.personId, posts.personId)))
     .where(or(isNotNull(posts.pooledAt), isNotNull(postStates.userId)))
     .orderBy(desc(posts.pooledAt), desc(posts.addedAt));
-  const saved = await db.select({ person: personFields, state: personStates, post: posts })
+  const saved = await db.select({ person: personFields, state: personStates, post: posts, onPlatform: platformMembership(sql`${people.handle}`) })
     .from(personStates).innerJoin(people, eq(personStates.personId, people.id))
     .leftJoin(posts, eq(personStates.sourcePostId, posts.id))
     .where(eq(personStates.userId, userId)).orderBy(desc(personStates.updatedAt));
   // shortcut: the curated MVP loads the whole pool; paginate when it reaches a few hundred posts.
   return {
-    posts: rows.map(({ post, person, postChoice, postOpenedAt, personUser, personChoice, personOpenedAt }) => ({
-      ...post, person,
+    posts: rows.map(({ post, person, onPlatform, postChoice, postOpenedAt, personUser, personChoice, personOpenedAt }) => ({
+      ...post, person: person ? { ...person, onPlatform } : null,
       // An explicit clear at person level must override older post-level saves too.
       choice: personUser ? personChoice : postChoice,
       openedAt: personUser ? personOpenedAt : postOpenedAt,
     })),
-    people: saved.map(({ person, state, post }) => ({
-      person, choice: state.choice, openedAt: state.openedAt, updatedAt: state.updatedAt,
-      sourcePost: post ? { ...post, person, choice: state.choice, openedAt: state.openedAt } : null,
-    })),
+    people: saved.map(({ person, state, post, onPlatform }) => {
+      const member = { ...person, onPlatform };
+      return {
+        person: member, choice: state.choice, openedAt: state.openedAt, updatedAt: state.updatedAt,
+        sourcePost: post ? { ...post, person: member, choice: state.choice, openedAt: state.openedAt } : null,
+      };
+    }),
   };
 }
 

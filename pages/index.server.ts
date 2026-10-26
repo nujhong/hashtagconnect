@@ -15,6 +15,7 @@ export const loader = defineHandler(async () => {
     } : null,
     curator: user ? await isCurator(user) : false,
     authReady: Boolean(env.AUTH_TWITTER_CLIENT_ID && env.AUTH_TWITTER_CLIENT_SECRET),
+    scanPolicy: scanAvailability(env),
     scanAvailability: scanAvailability(env, user ? ("xBio" in user && typeof user.xBio === "string" ? user.xBio : null) : undefined),
   };
 });

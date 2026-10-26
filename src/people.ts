@@ -1,6 +1,6 @@
 export type Choice = "save" | "skip";
 
-export type Person = { id: string; handle: string; profileUrl: string };
+export type Person = { id: string; handle: string; profileUrl: string; onPlatform?: boolean };
 
 export type Post = {
   id: string;

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, MotionConfig, motion, useReducedMotion } from "motion/react";
 import { auth, fetch as api, FetchError } from "void/client";
 import type { Props } from "./index.server";
-import { SANDBOX_SEEDS, dedupePeople, postFromUrl, profileFromInput, timeAgo, type Choice, type Discovery, type Person, type PersonEntry, type Post } from "../src/people";
+import { dedupePeople, postFromUrl, profileFromInput, timeAgo, type Choice, type Discovery, type Person, type PersonEntry, type Post } from "../src/people";
 import { embedConsentKey, lettersKey, previewKey, restorePreview, type Tags } from "../src/sandbox";
 import { SignInSheet, beginXSignIn, readAuthReturn, type Account, type AuthStep } from "../src/components/auth";
 import { Decisions } from "../src/components/decisions";
@@ -20,7 +20,6 @@ import "./style.css";
  * from the server (every mutation returns the viewer's Discovery); signed-out visitors and the auth
  * preview use a browser sandbox (src/sandbox.ts).
  */
-const seedIds = new Set(SANDBOX_SEEDS.map((s) => postFromUrl(s.url)?.id));
 // ponytail: hashtag tags are curator-assigned and preview-only; the database has no tag column yet (README §Proposed).
 const KNOWN_TAGS = ["connect", "building", "tech"];
 type Fly = { key: number; x1: number; y1: number; x2: number; y2: number };
@@ -287,7 +286,6 @@ function App(props: Props) {
   // The sandbox lives in browser storage, so the server render has nothing to show yet.
   const loaded = !preview || ready;
   const scanAccess: ScanAccess = props.user ? "signed-in" : previewAccount ? "preview" : "signed-out";
-  const source = !current ? "" : current.person ? `@${current.person.handle}` : seedIds.has(current.id) ? "Picked by hand from X search" : current.pooledAt !== null ? `In the pool since ${timeAgo(current.pooledAt)}` : `Your private save · ${timeAgo(current.addedAt)}`;
   const status = current?.choice === "save" ? "You kept this" : current?.choice === "skip" ? "You passed on this" : null;
   const scope = preview ? (account ? "Preview session" : "Preview") : props.curator ? "Curator" : null;
   const scanPanel = current && <ScanPanel key={current.id} access={scanAccess} availability={props.scanAvailability} postId={current.id}
@@ -296,6 +294,7 @@ function App(props: Props) {
   return <div className="app">
     <a className="skip-link" href="#post">Skip to the current post</a>
     <TopBar scope={scope} preview={preview} stashCount={lists.people.length} stashOpen={shelf} letters={letters} account={account}
+      scanPolicy={props.user ? props.scanPolicy : null} scanPause={scanPause}
       onStash={() => setShelf(!shelf)} onSettings={() => setModal("privacy")} onSignIn={signIn} onSignOut={signOut} />
 
     <div className={`layout${loaded ? "" : " is-loading"}`}>
@@ -311,6 +310,7 @@ function App(props: Props) {
         <span className="tagbar-note">{preview ? "Tags the curator saw · sandbox only" : "Tag filters arrive with curator tags"}</span>
       </nav>
 
+      {scanPanel}
       <div className="work">
         {/* The queue: the first unsorted pool post that matches the tags (one per person), or one brought back from Stash.
             X's official widget renders it whole and keeps still; nothing is laid over the iframe,
@@ -318,9 +318,8 @@ function App(props: Props) {
         <section id="post" className="post-col" tabIndex={-1} aria-label="The original post">
           <header className="post-head">
             {focused ? <button className="back" onClick={() => setFocusId(null)}>← Back to your queue</button> : <span className="post-label">The original post</span>}
-            {current && <span className="post-src">{status ?? source}</span>}
+            {status && <span className="post-src">{status}</span>}
           </header>
-          {scanPanel}
           <AnimatePresence mode="wait" custom={leaving} initial={false}>
             {!loaded ? <div key="shell" className="post-shell" aria-hidden="true" />
               : current ? <motion.div key={current.id} className="post-swap" custom={leaving}
@@ -341,7 +340,7 @@ function App(props: Props) {
         </section>
 
         <aside className="panel" aria-label="Your choice">
-          {/* The scan stays with the evidence on the left; the sticky decisions remain available while reading. */}
+          {/* The scan spans the row above; the sticky decisions remain available beside the invitation. */}
           <div className="panel-top">
             <div className="panel-head">
               <h1>{!loaded ? " " : focused ? <>Another look.</> : deck.length ? <><span className="hl"><Count value={deck.length} /></span> {deck.length === 1 ? "post." : "posts."} <span className="br">Your call.</span></> : <>All caught up.</>}</h1>
