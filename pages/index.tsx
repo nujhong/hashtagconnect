@@ -5,6 +5,7 @@ import type { Props } from "./index.server";
 import { dedupePeople, postFromUrl, profileFromInput, timeAgo, type Choice, type Discovery, type Person, type PersonEntry, type Post } from "../src/people";
 import { embedConsentKey, lettersKey, previewKey, restorePreview, type Tags } from "../src/sandbox";
 import { SignInSheet, beginXSignIn, readAuthReturn, type Account, type AuthStep } from "../src/components/auth";
+import { DiscoveryFilters } from "../src/components/discovery-filters";
 import { Decisions } from "../src/components/decisions";
 import { Invitation } from "../src/components/invitation";
 import { ScanPanel, type ScanAccess } from "../src/components/scan";
@@ -110,13 +111,13 @@ function App(props: Props) {
   /**
    * Desktop shortcuts: ← Pass, → Keep, S Stash (switchable off).
    * Native dialogs handle their own Escape. Nothing fires while typing, with a modifier held, inside
-   * a dialog, on widgets that own arrow keys, or while focus is in X's iframe (its keys never reach us).
+   * a dialog or filter popover, on widgets that own arrow keys, or while focus is in X's iframe (its keys never reach us).
    */
   const onKey = useRef<(e: KeyboardEvent) => void>(() => {});
   onKey.current = (e) => {
     if (e.defaultPrevented || e.repeat || e.metaKey || e.ctrlKey || e.altKey) return;
     if ((e.target as HTMLElement | null)?.closest?.("input, textarea, select, [contenteditable], [role=tab], [role=radio], [role=slider], [role=menu], summary")) return;
-    if (document.querySelector("dialog[open]")) return;
+    if (document.querySelector("dialog[open], [popover]:popover-open")) return;
     if (letters && !e.shiftKey && e.key.toLowerCase() === "s") { e.preventDefault(); setShelf(true); return; }
     if (!current || pending || (e.key !== "ArrowLeft" && e.key !== "ArrowRight")) return;
     const choice: Choice = e.key === "ArrowRight" ? "save" : "skip";
@@ -285,67 +286,59 @@ function App(props: Props) {
       onStash={() => setShelf(!shelf)} onSettings={() => setModal("privacy")} onSignIn={signIn} onSignOut={signOut} />
 
     <div className={`layout${loaded ? "" : " is-loading"}`}>
-      <nav className="tagbar" aria-label="Filter by hashtag">
-        {tagNames.map((t) => {
-          const on = filter.includes(t);
-          const n = unseen.filter((p) => tags[p.id]?.includes(t)).length;
-          return <button key={t} className={`sticker${on ? " on" : ""}${n ? "" : " none"}`} aria-pressed={on} disabled={!preview}
-            onClick={() => { setFilter(on ? filter.filter((x) => x !== t) : [...filter, t]); setFocusId(null); }}>
-            #{t}{n ? null : <small>0</small>}
-          </button>;
-        })}
-        <span className="tagbar-note">{preview ? "Tags the curator saw · sandbox only" : "Tag filters arrive with curator tags"}</span>
-      </nav>
+      <div className="workspace">
+        {scanPanel}
+        <div className="work">
+          {/* The queue: the first unsorted pool post that matches the tags (one per person), or one brought back from Stash.
+              X's official widget renders it whole and keeps still; nothing is laid over the iframe,
+              and it only changes when you decide, filter or pick another post. */}
+          <section id="post" className="post-col" tabIndex={-1} aria-label="The original post">
+            {(focused || status) && <header className="post-head">
+              {focused && <button className="back" onClick={() => setFocusId(null)}>← Back to your queue</button>}
+              {status && <span className="post-src">{status}</span>}
+            </header>}
+            <AnimatePresence mode="wait" custom={leaving} initial={false}>
+              {!loaded ? <div key="shell" className="post-shell" aria-hidden="true" />
+                : current ? <motion.div key={current.id} className="post-swap" custom={leaving}
+                    initial={{ opacity: 0, y: 28 }} animate={{ opacity: 1, y: 0 }} transition={spring}
+                    exit="leave" variants={{ leave: (c: Choice | null) => c === "save"
+                      ? { opacity: 0, y: -28, scale: 0.97, transition: { duration: 0.22 } }
+                      : c === "skip" ? { opacity: 0, x: -48, transition: { duration: 0.22 } } : { opacity: 0, transition: { duration: 0.15 } } }}>
+                    <Invitation post={current} embeds={embeds} onEnable={() => setConsent(true)} onOpen={markOpened} />
+                  </motion.div>
+                : <motion.div key="empty" className="empty" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
+                    <h2>{filter.length ? "No one under these tags." : "Nothing left in your queue."}</h2>
+                    <p>{filter.length ? "Drop a tag to see more people." : pool.length ? "You’ve kept, passed or opened every invitation here. Clear your history in Settings to start again." : "The shared pool doesn’t have any invitations yet."}</p>
+                    {filter.length > 0 ? <button className="btn" onClick={() => setFilter([])}>Clear tags</button>
+                      : lists.people.length > 0 && <button className="btn primary" onClick={() => setShelf(true)}>Open your Stash</button>}
+                  </motion.div>}
+            </AnimatePresence>
+            {current && tags[current.id]?.length ? <p className="post-note"><b>{tags[current.id].map((t) => `#${t}`).join(" ")}</b></p> : null}
+          </section>
 
-      {scanPanel}
-      <div className="work">
-        {/* The queue: the first unsorted pool post that matches the tags (one per person), or one brought back from Stash.
-            X's official widget renders it whole and keeps still; nothing is laid over the iframe,
-            and it only changes when you decide, filter or pick another post. */}
-        <section id="post" className="post-col" tabIndex={-1} aria-label="The original post">
-          <header className="post-head">
-            {focused ? <button className="back" onClick={() => setFocusId(null)}>← Back to your queue</button> : <span className="post-label">The original post</span>}
-            {status && <span className="post-src">{status}</span>}
-          </header>
-          <AnimatePresence mode="wait" custom={leaving} initial={false}>
-            {!loaded ? <div key="shell" className="post-shell" aria-hidden="true" />
-              : current ? <motion.div key={current.id} className="post-swap" custom={leaving}
-                  initial={{ opacity: 0, y: 28 }} animate={{ opacity: 1, y: 0 }} transition={spring}
-                  exit="leave" variants={{ leave: (c: Choice | null) => c === "save"
-                    ? { opacity: 0, y: -28, scale: 0.97, transition: { duration: 0.22 } }
-                    : c === "skip" ? { opacity: 0, x: -48, transition: { duration: 0.22 } } : { opacity: 0, transition: { duration: 0.15 } } }}>
-                  <Invitation post={current} embeds={embeds} onEnable={() => setConsent(true)} onOpen={markOpened} />
-                </motion.div>
-              : <motion.div key="empty" className="empty" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-                  <h2>{filter.length ? "No one under these tags." : "Nothing left in your queue."}</h2>
-                  <p>{filter.length ? "Drop a tag to see more people." : pool.length ? "You’ve kept, passed or opened every invitation here. Clear your history in Settings to start again." : "The shared pool doesn’t have any invitations yet."}</p>
-                  {filter.length > 0 ? <button className="btn" onClick={() => setFilter([])}>Clear tags</button>
-                    : lists.people.length > 0 && <button className="btn primary" onClick={() => setShelf(true)}>Open your Stash</button>}
-                </motion.div>}
-          </AnimatePresence>
-          {current && tags[current.id]?.length ? <p className="post-note"><b>{tags[current.id].map((t) => `#${t}`).join(" ")}</b></p> : null}
-        </section>
-
-        <aside className="panel" aria-label="Your choice">
-          {/* The scan spans the row above; the sticky decisions remain available beside the invitation. */}
-          <div className="panel-top">
-            <div className="panel-head">
-              <h1>{!loaded ? " " : focused ? <>Another look.</> : deck.length ? <><span className="hl"><Count value={deck.length} /></span> {deck.length === 1 ? "post." : "posts."} <span className="br">Your call.</span></> : <>All caught up.</>}</h1>
-              <p className="panel-sub">{focused ? "Change your mind any time." : deck.length ? "Keep the people worth a reply. They wait in your Stash." : "New invitations show up when the curator adds them."}</p>
+          <aside className="panel" aria-label="Your choice">
+            {/* The shared scan joins the invitation and decisions; phones place discovery above it and pin decisions below. */}
+            <div className="panel-top">
+              <DiscoveryFilters tags={tagNames.map((name) => ({ name, count: unseen.filter((post) => tags[post.id]?.includes(name)).length }))}
+                selected={filter} preview={preview} onChange={(next) => { setFilter(next); setFocusId(null); }} />
+              <div className="panel-head">
+                <h1>{!loaded ? " " : focused ? <>Another look.</> : deck.length ? <><span className="queue-count"><Count value={deck.length} /></span> {deck.length === 1 ? "person" : "people"} <span className="br">to connect</span></> : <>All caught up.</>}</h1>
+                <p className="panel-sub">{focused ? "Change your mind any time." : deck.length ? "Keep someone in your Stash. Make the first move on X." : "New invitations show up when the curator adds them."}</p>
+              </div>
             </div>
-          </div>
 
-          {current && <Decisions post={current} hit={hit} busy={pending} onDecide={decide} />}
+            {current && <Decisions post={current} hit={hit} busy={pending} onDecide={decide} />}
 
-          <p className="panel-foot">
-            {current?.openedAt ? <>Opened on X {timeAgo(current.openedAt)}. </> : null}
-            {!focused && deck.length > 1 ? <>{deck.length - 1} more after this. </> : null}
-            {!account && <><button className="link" onClick={signIn}>Continue with X</button> to keep future saves on your account. </>}
-            {canCurate && current?.pooledAt != null && (confirmRemove
-              ? <span className="confirm">Remove for everyone, with every save and history? <button className="link danger" onClick={() => removeFromPool(current)}>Remove</button> <button className="link" onClick={() => setConfirmRemove(false)}>Keep it</button></span>
-              : <button className="link" onClick={() => setConfirmRemove(true)}>Remove from pool</button>)}
-          </p>
-        </aside>
+            <p className="panel-foot">
+              {current?.openedAt ? <>Opened on X {timeAgo(current.openedAt)}. </> : null}
+              {!focused && deck.length > 1 ? <>{deck.length - 1} more after this. </> : null}
+              {!account && <><button className="link" onClick={signIn}>Continue with X</button> to keep future saves on your account. </>}
+              {canCurate && current?.pooledAt != null && (confirmRemove
+                ? <span className="confirm">Remove for everyone, with every save and history? <button className="link danger" onClick={() => removeFromPool(current)}>Remove</button> <button className="link" onClick={() => setConfirmRemove(false)}>Keep it</button></span>
+                : <button className="link" onClick={() => setConfirmRemove(true)}>Remove from pool</button>)}
+            </p>
+          </aside>
+        </div>
       </div>
 
       <Stash dialogRef={shelfRef} open={shelf} onClose={() => setShelf(false)} browserOnly={preview && !account}

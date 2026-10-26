@@ -69,10 +69,11 @@ export function ScanPanel({ access, availability, postId, pausedReason, onPause,
 
   const scanning = canScan && !pausedReason && phase.kind !== "done";
   const done = phase.kind === "done" && !pausedReason;
+  const scored = done && phase.kind === "done" && phase.result.status === "ok";
   return <section id="bio-scan" className="post-analysis" aria-label="Bio scan">
-    <header className="scan-heading">
+    {!scored && <header className="scan-heading">
       <p className="scan-label"><span className="scan-glyph" aria-hidden="true" />Bio scan</p>
-    </header>
+    </header>}
     <div className="scan">
     <AnimatePresence mode="wait" initial={false}>
       {!canScan && !done && <motion.div key="idle" className="scan-step" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={spring}>
@@ -110,7 +111,6 @@ export function ScanPanel({ access, availability, postId, pausedReason, onPause,
 }
 
 function Result({ result, demo, onSignIn }: { result: ScanResult; demo: boolean; onSignIn: () => void }) {
-  const reduced = useReducedMotion();
   if (result.status === "empty_bio") return <>
     <h2 className="scan-title">No bio on this account.</h2>
     <p className="scan-lede">{result.reason}</p>
@@ -134,9 +134,8 @@ function Result({ result, demo, onSignIn }: { result: ScanResult; demo: boolean;
       <div className="scan-overall">
         <motion.div className="scan-rating" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={spring}>
           <h2 className="scan-score" aria-label={`${result.relevance} out of 100. Relevance to you.`}>{result.relevance}<span aria-hidden="true">/100</span></h2>
-          <div className="scan-rating-copy"><p>Relevance to you</p>{result.tentative && <span className="scan-tentative">Tentative</span>}</div>
+          <div className="scan-rating-copy"><span className="scan-kicker">Bio scan</span><p>Relevance<span className="scan-long-label"> to you</span></p>{result.tentative && <span className="scan-tentative">Tentative</span>}</div>
         </motion.div>
-        <div className="scan-meter" aria-hidden="true"><motion.div initial={reduced ? false : { width: 0 }} animate={{ width: `${result.relevance}%` }} transition={{ duration: reduced ? 0 : 0.35, ease: "easeOut" }} /></div>
       </div>
       <dl className="scan-signals" aria-label="Supporting signals">
         <div><dt>Interests in common</dt><dd>{Math.round(result.signals.sharedInterest * 100)}<span>%</span></dd></div>

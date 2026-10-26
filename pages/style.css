@@ -41,9 +41,9 @@
     color-scheme: dark;
   }
 }
-/* The control slab: one graphite island in both themes. Its children read these tokens.
-   On phones the panel dissolves into the page (see the 899px query), so only its action bar stays a slab. */
-.panel, .decide, .modal, .shelf, .menu, .toast {
+/* The connected workspace and controls share a graphite surface in both themes.
+   On phones the panel hands its children to the workspace grid; decisions stay pinned. */
+.workspace, .panel, .decide, .modal, .shelf, .menu, .toast {
   --ink: #f4f3ef; --bg: #141416; --panel: #1f1f23; --surface: #232328; --sunk: #2c2c31; --muted: #a9a8af; --faint: #8f8e95;
   --line: #34343a; --edge: #000; --hot-text: #ff4d9a; --focus: #b3a6ff; --hatch: rgb(244 243 239 / 0.05); --danger: #ff6b7a;
   --signal-tint: color-mix(in srgb, var(--keep) 22%, #141416);
@@ -100,19 +100,24 @@ code { font: 12px var(--mono); padding: 1px 5px; border-radius: 5px; background:
 .layout { max-width: 1200px; margin: 0 auto; padding: 20px 20px 48px; }
 .layout.is-loading .tagbar, .layout.is-loading .panel-head { visibility: hidden; }
 
-/* Hashtag stickers: above the workspace, never mixed into the per-post controls */
-.tagbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 28px; }
-.sticker { display: inline-flex; align-items: center; gap: 6px; height: 46px; padding: 0 20px; border: 2px solid var(--ink); border-radius: 999px; background: var(--surface); font: 700 19px/1 var(--display); letter-spacing: -0.02em; box-shadow: 0 4px 0 var(--edge); transition: transform 0.12s, box-shadow 0.12s, background 0.15s, color 0.15s; }
-.sticker:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 5px 0 var(--edge); }
-.sticker.on { background: var(--keep); color: var(--keep-ink); border-color: var(--edge); transform: translateY(3px); box-shadow: 0 1px 0 var(--edge); }
-.sticker.none:not(.on) { opacity: 0.45; }
-.sticker small { font: 600 12px var(--sans); opacity: 0.7; }
-.sticker:disabled { opacity: 0.4; box-shadow: none; }
-.tagbar-note { margin-left: 4px; color: var(--faint); font-size: 12.5px; }
+/* Hashtag filters live in the right controls; phones open the same choices with a native popover. */
+.discovery-label { margin-bottom: 10px; color: var(--muted); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; }
+.tagbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.sticker { display: inline-flex; align-items: center; gap: 6px; min-height: 38px; padding: 7px 12px; border: 1px solid var(--faint); border-radius: 9px; background: transparent; font: 600 14px/1.2 var(--display); transition: transform 0.12s, background 0.15s; }
+.sticker:hover:not(:disabled) { background: var(--surface); }
+.sticker.on { background: var(--keep); color: var(--keep-ink); border-color: var(--keep); }
+.sticker:active:not(:disabled) { transform: translateY(2px); }
+.sticker small { font: 600 11px var(--sans); }
+.sticker:disabled { opacity: 0.55; }
+.tagbar-note { margin-top: 10px; color: var(--muted); font-size: 12px; max-width: 32ch; }
+.filter-toggle { display: none; }
 
-/* Workspace: the official post on the left, the controls on the right */
-.work { display: grid; grid-template-columns: minmax(0, 550px) minmax(380px, 500px); justify-content: space-between; gap: 56px; align-items: start; }
-.post-col { min-width: 0; outline: none; scroll-margin-top: 80px; }
+/* Workspace: one shared scan above the official post and the adjoining controls. */
+.workspace { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 0.82fr); border: 1px solid var(--line); border-radius: 28px; background: var(--slab); color: var(--ink); overflow: clip; --scan-text: #b9a8ff; }
+.work { display: contents; }
+.post-col { grid-column: 1; min-width: 0; padding: 26px 30px 30px; background: #1a1a1d; outline: none; scroll-margin-top: 80px; }
+.workspace .post-frame { padding: 0; border-radius: 0; background: none; min-height: 450px; gap: 20px; }
+.original-label { margin-left: auto; color: var(--muted); font-size: 11px; }
 .post-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 4px 12px; min-height: 34px; margin-bottom: 10px; font-size: 13.5px; }
 .post-label { font-weight: 600; }
 .post-src { color: var(--muted); }
@@ -154,23 +159,23 @@ code { font: 12px var(--mono); padding: 1px 5px; border-radius: 5px; background:
 .empty h2 { font: 800 32px/1 var(--display); letter-spacing: -0.04em; }
 .empty p { max-width: 38ch; color: var(--muted); margin-bottom: 6px; }
 
-/* The panel starts level with the post container, not its label row: the offset is .post-head's
-   min-height (34px) plus its margin (10px). Heights below allow for that resting position. */
-.panel { position: sticky; top: 84px; margin-top: 44px; display: grid; gap: 22px; max-height: calc(100dvh - 220px); overflow-y: auto; padding: 32px; border-radius: 32px; background: var(--slab); color: var(--ink); border: 1px solid rgb(255 255 255 / 0.06); scrollbar-width: thin; }
-.panel-top { display: grid; gap: 18px; justify-items: start; }
-.panel-head { display: grid; gap: 12px; }
-.panel-head h1 { font: 800 clamp(52px, 5.6vw, 80px)/0.88 var(--display); letter-spacing: -0.055em; }
-.panel-head .hl { color: var(--hot-text); }
+/* The panel joins the post without a separate rounded card or vertical offset. Its height follows
+   the invitation; the count fills the space between discovery controls and decisions. */
+.panel { grid-column: 2; display: flex; flex-direction: column; gap: 28px; padding: 28px 32px 30px; border-left: 1px solid var(--line); background: var(--slab); color: var(--ink); }
+.panel-top { display: contents; }
+.panel-head { display: flex; flex: 1; flex-direction: column; justify-content: center; gap: 20px; padding: 10px 0; }
+.panel-head h1 { font: 800 clamp(36px, 4.2vw, 53px)/0.98 var(--display); letter-spacing: -0.047em; }
+.panel-head .queue-count { display: block; margin-bottom: 12px; font-size: clamp(70px, 8vw, 104px); line-height: 0.9; letter-spacing: -0.06em; }
 .panel-head .br { display: block; }
-.panel-sub { max-width: 34ch; color: var(--muted); font-size: 16px; }
-.panel-foot { color: var(--muted); font-size: 13px; }
+.panel-sub { max-width: 26ch; color: var(--muted); font-size: 13px; }
+.panel-foot { color: var(--muted); font-size: 12px; }
 .panel-foot .confirm { color: var(--ink); }
-/* Scanning: an automatic annotation in the evidence column. The control slab stays sticky.
+/* Scanning is the shared header of the connected workspace, without a decorative top rule.
    The current post owns its result; leaving it discards that result without caching. */
-.post-analysis { padding: 12px 0 24px; margin-bottom: 20px; border-top: 3px solid var(--scan); border-bottom: 1px solid var(--line); scroll-margin-top: 84px; }
-.post-analysis { animation: scan-in 0.24s ease-out; }
-.scan-heading { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 16px; margin-bottom: 16px; }
-.scan-label { display: flex; align-items: center; gap: 8px; font: 700 13px var(--sans); }
+.post-analysis { grid-column: 1 / -1; min-height: 168px; padding: 24px 32px; border-bottom: 1px solid var(--line); scroll-margin-top: 84px; animation: scan-in 0.24s ease-out; }
+.scan-heading { margin-bottom: 12px; }
+.scan-label, .scan-kicker { color: var(--muted); font: 600 11px var(--sans); text-transform: uppercase; letter-spacing: 0.07em; }
+.scan-label .scan-glyph { display: none; }
 .scan-usage { max-width: 120px; color: var(--muted); font-size: 12px; line-height: 1.3; text-align: right; }
 @keyframes scan-in { from { opacity: 0; translate: 0 8px; } }
 
@@ -188,12 +193,13 @@ code { font: 12px var(--mono); padding: 1px 5px; border-radius: 5px; background:
 .big:active:not(:disabled), .big.on { transform: translateY(5px); box-shadow: 0 1px 0 var(--edge); }
 .big.keep { background: var(--keep); color: var(--keep-ink); }
 .big, .big.keep { height: 96px; font-size: 32px; }
+.workspace .big { height: 76px; font-size: 29px; padding: 0 20px; border-radius: 17px; }
 .big.pass.on { background: var(--sunk); }
 .big span[aria-hidden] { font-weight: 600; }
 
 .fly { position: fixed; left: 0; top: 0; z-index: 45; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: var(--keep); color: var(--keep-ink); border: 2px solid var(--edge); font: 800 15px var(--display); pointer-events: none; }
 
-/* Scan: bio and invitation stay together on the reading side, including on phones. */
+/* Scan: relevance leads; supporting probabilities remain visible in a compact vertical list. */
 .scan-glyph { position: relative; width: 18px; height: 18px; border: 2px solid currentColor; border-radius: 50%; }
 .scan-glyph::after { content: ""; position: absolute; inset: 3px; border-radius: 50%; background: var(--scan); }
 .scan { display: grid; }
@@ -214,25 +220,23 @@ code { font: 12px var(--mono); padding: 1px 5px; border-radius: 5px; background:
 .radar span:nth-child(2) { inset: 14px; opacity: 0.55; }
 .radar span:nth-child(3) { inset: 30px; background: var(--scan); }
 .radar b { position: absolute; inset: 0; border-radius: 50%; background: conic-gradient(from 0deg, transparent 0 270deg, color-mix(in srgb, var(--scan) 65%, transparent) 360deg); }
-.scan-result { display: grid; grid-template-columns: minmax(0, 1fr) minmax(240px, 0.85fr); align-items: center; gap: 48px; width: 100%; }
-.scan-overall { display: grid; gap: 18px; }
+.scan-result { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 0.82fr); align-items: center; gap: 64px; width: 100%; }
+.scan-overall { min-width: 0; }
 .scan-rating { display: flex; align-items: center; flex-wrap: wrap; gap: 12px 24px; width: 100%; }
-.scan-score, .modal .scan-score { display: flex; align-items: baseline; gap: 8px; margin: 0; color: var(--scan-text); font: 800 clamp(68px, 7vw, 88px)/0.95 var(--display); letter-spacing: -0.06em; }
+.scan-score, .modal .scan-score { display: flex; align-items: baseline; gap: 8px; margin: 0; color: var(--scan-text); font: 800 clamp(64px, 7vw, 80px)/0.95 var(--display); letter-spacing: -0.06em; }
 .scan-score span { font-size: 24px; letter-spacing: -0.025em; color: var(--muted); }
 .scan-rating-copy { display: grid; gap: 5px; }
 .scan-rating-copy p, .modal .scan-rating-copy p { margin: 0; color: var(--ink); font: 800 22px/1.05 var(--display); letter-spacing: -0.03em; }
 .scan-tentative { color: var(--muted); font: 600 13px var(--sans); }
-.scan-meter { width: 100%; height: 5px; overflow: hidden; border-radius: 3px; background: var(--line); }
-.scan-meter > div { height: 100%; background: var(--scan); }
 .scan-signals { display: grid; width: 100%; margin: 0; }
-.scan-signals > div { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 0; }
+.scan-signals > div { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 0; }
 .scan-signals > div + div { border-top: 1px solid var(--line); }
-.scan-signals dt { color: var(--muted); font: 500 15px/1.35 var(--sans); }
-.scan-signals dd { margin: 0; white-space: nowrap; color: var(--ink); font: 800 30px/1 var(--display); letter-spacing: -0.035em; }
+.scan-signals dt { color: var(--muted); font: 500 14px/1.35 var(--sans); }
+.scan-signals dd { margin: 0; white-space: nowrap; color: var(--ink); font: 700 26px/1 var(--display); letter-spacing: -0.035em; }
 .scan-signals dd span { margin-left: 2px; font-size: 15px; color: var(--muted); }
 .scan-quotes { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .scan-source { display: grid; gap: 10px; padding: 6px 8px; }
-.scan-evidence { width: 100%; margin-top: 6px; }
+.scan-evidence { width: 100%; margin-top: 0; }
 .scan-evidence summary { width: fit-content; cursor: pointer; font: 700 13px var(--sans); text-underline-offset: 4px; }
 .scan-evidence summary:hover { text-decoration: underline; }
 .scan-evidence[open] summary { margin-bottom: 16px; }
@@ -374,33 +378,59 @@ code { font: 12px var(--mono); padding: 1px 5px; border-radius: 5px; background:
 .settings-info { margin: 4px 0 24px; }
 
 /* Phones and narrow windows: scan and post inline, decisions pinned to the bottom */
-@media (max-width: 650px) {
-  .scan-result { grid-template-columns: 1fr; gap: 20px; }
-}
 @media (max-width: 899px) {
   .top { height: 56px; padding: 0 16px; gap: 8px; }
-  .layout { padding: 4px 16px 24px; }
+  .layout { padding: 4px 10px 24px; }
+  .workspace { grid-template-columns: minmax(0, 1fr) auto; border-radius: 20px; }
   .post-frame { min-height: 300px; padding: 10px; border-radius: 20px; }
   .post-shell { height: 300px; border-radius: 20px; }
-  .tagbar { flex-wrap: nowrap; overflow-x: auto; margin: 0 -16px 14px; padding: 2px 16px 6px; scrollbar-width: none; gap: 8px; }
-  .sticker { flex: none; height: 40px; padding: 0 16px; font-size: 17px; box-shadow: 0 3px 0 var(--edge); }
-  .tagbar-note { flex: none; }
-  .work { display: flex; flex-direction: column; align-items: stretch; gap: 0; }
-  /* The panel dissolves into the page here: hand its children the page palette back. */
-  .panel { display: contents; --ink: inherit; --bg: inherit; --panel: inherit; --surface: inherit; --sunk: inherit; --muted: inherit; --faint: inherit;
-    --line: inherit; --edge: inherit; --hot-text: inherit; --focus: inherit; --hatch: inherit; --danger: inherit; --signal-tint: inherit; color-scheme: inherit; }
-  .panel-top { order: 0; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
-  .panel-head h1 { font-size: 34px; line-height: 0.95; }
+  /* The panel dissolves into the shared workspace grid, retaining the same graphite palette. */
+  .panel, .panel-top { display: contents; }
+  .panel-head { grid-row: 1; grid-column: 1; padding: 18px 0 18px 16px; gap: 0; min-width: 0; }
+  .panel-head h1, .panel-head .queue-count { display: inline; margin: 0; font-size: 19px; line-height: 1.1; letter-spacing: -0.035em; }
+  .panel-head .br { display: inline; }
   .panel-sub { display: none; }
-  .post-col { order: 1; }
-  .post-head { display: none; }
-  .post-col:has(.back) .post-head { display: flex; }
+  .discovery-filters { grid-row: 1; grid-column: 2; align-self: center; padding: 0 12px 0 10px; }
+  .discovery-label { display: none; }
+  .filter-toggle { display: grid; place-items: center; width: 40px; height: 40px; border: 1px solid var(--faint); border-radius: 11px; background: var(--surface); anchor-name: --discovery-filter; }
+  .filter-toggle svg { width: 20px; height: 20px; fill: var(--ink); stroke: var(--ink); stroke-width: 1.8; }
+  .filter-options[popover] { position: fixed; inset: 112px 24px auto auto; position-anchor: --discovery-filter; top: anchor(bottom); right: anchor(right); margin: 8px 0 0; width: min(290px, calc(100vw - 64px)); padding: 16px; border: 1px solid var(--faint); border-radius: 14px; background: var(--surface); color: var(--ink); box-shadow: 0 14px 35px #0008; }
+  .filter-options .sticker { min-height: 42px; }
+  .post-analysis { grid-row: 2; grid-column: 1 / -1; min-height: 150px; padding: 14px 16px; border-top: 1px solid var(--line); }
+  .scan-result { grid-template-columns: 1fr; gap: 8px; }
+  .scan-rating { flex-wrap: nowrap; gap: 16px; }
+  .scan-score { font-size: 44px; gap: 3px; }
+  .scan-score span { font-size: 16px; }
+  .scan-kicker, .scan-long-label { display: none; }
+  .scan-rating-copy p { font-size: 18px; }
+  .scan-tentative { font-size: 11px; }
+  .scan-signals > div { padding: 2px 0; }
+  .scan-signals > div + div { border: none; }
+  .scan-signals dt { font-size: 12px; }
+  .scan-signals dd { font-size: 18px; }
+  .scan-signals dd span { font-size: 11px; }
+  .scan-evidence summary { min-height: 32px; display: flex; align-items: center; font-size: 12px; color: var(--muted); }
+  .scan-evidence summary::before { content: "+"; margin-right: 6px; }
+  .scan-evidence[open] summary::before { content: "−"; }
+  .scan-heading { margin-bottom: 8px; }
+  .scan-title { font-size: 25px; }
+  .scan-lede { font-size: 13px; }
+  .scan-step { gap: 8px; }
+  .radar { width: 48px; height: 48px; }
+  .radar span:nth-child(2) { inset: 9px; }
+  .radar span:nth-child(3) { inset: 19px; }
+  .post-col { grid-row: 3; grid-column: 1 / -1; padding: 14px 10px 16px; }
+  .workspace .post-frame { min-height: 300px; gap: 12px; }
+  .post-frame-head { gap: 8px; }
+  .post-frame-head strong { font-size: 15px; }
+  .original-label { font-size: 10px; }
+  .post-head { margin-bottom: 12px; }
   /* Fixed to the viewport: the post's height can never move the decisions. The footer reserves room below. */
-  .decide { position: fixed; left: 12px; right: 12px; bottom: calc(10px + env(safe-area-inset-bottom)); z-index: 15; grid-template-columns: 1fr 1.35fr; gap: 8px; padding: 8px; border-radius: 28px; background: var(--slab); color: var(--ink); box-shadow: 0 16px 40px -18px rgb(0 0 0 / 0.5); }
-  .foot { padding-bottom: calc(104px + env(safe-area-inset-bottom)); }
-  .big, .big.keep { height: 58px; padding: 0 16px; border-radius: 18px; font-size: 22px; box-shadow: 0 4px 0 var(--edge); }
+  .decide { position: fixed; left: 0; right: 0; bottom: 0; z-index: 15; grid-template-columns: 1fr 1.3fr; gap: 10px; padding: 12px 16px calc(16px + env(safe-area-inset-bottom)); background: var(--slab); border-top: 1px solid var(--line); color: var(--ink); }
+  .foot { padding-bottom: calc(110px + env(safe-area-inset-bottom)); }
+  .big, .big.keep, .workspace .big { height: 58px; padding: 0 16px; border-radius: 14px; font-size: 28px; box-shadow: 0 4px 0 var(--edge); justify-content: center; }
   .big:active:not(:disabled), .big.on { transform: translateY(3px); box-shadow: 0 1px 0 var(--edge); }
-  .panel-foot { order: 3; margin-top: 14px; text-align: center; }
+  .panel-foot { grid-row: 4; grid-column: 1 / -1; padding: 14px 16px; text-align: center; }
   .shelf { inset: auto 0 0 0; width: auto; height: auto; max-height: 86dvh; border-radius: 28px 28px 0 0; }
   .shelf[open] { animation-name: sheet-in; }
   .modal { inset: auto 0 0 0; width: auto; max-width: none; margin: 0; border-radius: 28px 28px 0 0; border-bottom: none; padding: 24px 20px 28px; }
@@ -420,7 +450,7 @@ code { font: 12px var(--mono); padding: 1px 5px; border-radius: 5px; background:
   .top-cta { height: 38px; font-size: 14px; }
   .big i { display: none; }
   .big { justify-content: center; }
-  .panel-head h1 { font-size: 30px; }
+  .panel-head h1, .panel-head .queue-count { font-size: 18px; }
 }
 /* Smallest phones: mark only. At phone widths, "Stash" stays in the accessible name beside its icon. */
 @media (max-width: 369px) {
@@ -436,6 +466,7 @@ code { font: 12px var(--mono); padding: 1px 5px; border-radius: 5px; background:
 .keycap.is-hint { display: none; }
 @media (hover: hover) and (pointer: fine) { .keycap.is-hint { display: inline-flex; } }
 .big .keycap { font-size: 16px; }
+@media (max-width: 899px) { .decide .keycap { display: none; } }
 .kept-btn .keycap { font-size: 10.5px; }
 .shortcuts .keycap { margin: 0 2px; font-size: 11.5px; }
 .stash-icon { flex: none; width: 13px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; }
