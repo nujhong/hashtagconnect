@@ -45,7 +45,7 @@ test("sandbox seeds merge once without overwriting the visitor's posts, choices 
   assert.equal(mergeSeeds({ ...first, posts: removed }, 10).posts.length, removed.length);
 });
 
-test("curator profile links normalize aliases and reject post links or arbitrary targets", () => {
+test("X profile links normalize aliases and reject post links or arbitrary targets", () => {
   assert.deepEqual(profileFromInput("@Example_Name"), { handle: "Example_Name", profileUrl: "https://x.com/example_name" });
   assert.deepEqual(profileFromInput("https://twitter.com/Example_Name/?s=21"), profileFromInput("@Example_Name"));
   for (const value of ["https://x.com/a/status/1234", "https://x.com/home", "https://x.com@evil.test/name",

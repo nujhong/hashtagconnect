@@ -5,7 +5,7 @@ import { Modal } from "./ui";
 
 /** Sign-in journey (handoff, cancel, error, preview) and the signed-in account menu. Native Better Auth only. */
 export type AuthStep = "handoff" | "cancelled" | "error";
-export type Account = { name: string; image: string | null; username: string | null; curator: boolean; preview: boolean };
+export type Account = { name: string; image: string | null; username: string | null; preview: boolean };
 const spring = { type: "spring", stiffness: 420, damping: 36 } as const;
 
 /** Reads what Better Auth put on the URL after the X round trip, then cleans the URL. */
@@ -142,7 +142,7 @@ export function AccountMenu({ account, onPrivacy, onSignOut }: { account: Accoun
       {open && <motion.div className="menu" initial={{ opacity: 0, y: -6, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -4 }} transition={spring}>
         <div className="menu-head">
           <b>{account.name}</b>
-          <span>{handle}{account.curator && <em className="badge">Curator</em>}</span>
+          <span>{handle}</span>
           <small>{account.preview ? "Preview account · not a real session" : "Signed in with X · read-only access"}</small>
         </div>
         <button onClick={() => { setOpen(false); onPrivacy(); }}>Settings & privacy</button>

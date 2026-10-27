@@ -3,7 +3,7 @@ import { getUser } from "void/auth";
 import { db, eq } from "void/db";
 import { viewerContext, funnel } from "@schema";
 import { env } from "void/env";
-import { isCurator, listPosts } from "../src/server/discovery";
+import { listPosts } from "../src/server/discovery";
 import { scanAvailability } from "../src/server/scan-setup";
 
 export type Props = InferProps<typeof loader>;
@@ -22,7 +22,6 @@ export const loader = defineHandler(async () => {
       name: user.name, image: user.image,
       username: "xUsername" in user && typeof user.xUsername === "string" ? user.xUsername : null,
     } : null,
-    curator: user ? await isCurator(user) : false,
     authReady: Boolean(env.AUTH_TWITTER_CLIENT_ID && env.AUTH_TWITTER_CLIENT_SECRET),
     scanPolicy: scanAvailability(env, undefined, import.meta.env.PROD),
     scanAvailability: scanAvailability(env, user ? (bio?.trim() || context?.sentence || bio) : undefined, import.meta.env.PROD),

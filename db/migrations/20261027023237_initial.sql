@@ -65,19 +65,6 @@ CREATE TABLE `scan_usage` (
 	`attempts` integer NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE `submissions` (
-	`id` text PRIMARY KEY NOT NULL,
-	`user_id` text NOT NULL,
-	`profile_url` text NOT NULL,
-	`post_url` text NOT NULL,
-	`description` text NOT NULL,
-	`status` text DEFAULT 'pending' NOT NULL,
-	`version` text NOT NULL,
-	`updated_at` integer NOT NULL
-);
---> statement-breakpoint
-CREATE UNIQUE INDEX `submissions_user_id_unique` ON `submissions` (`user_id`);--> statement-breakpoint
-CREATE INDEX `submissions_review` ON `submissions` (`status`,`updated_at`);--> statement-breakpoint
 CREATE TABLE `viewer_context` (
 	`user_id` text PRIMARY KEY NOT NULL,
 	`sentence` text NOT NULL

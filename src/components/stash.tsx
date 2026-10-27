@@ -8,7 +8,7 @@ import { OpenLink, StashIcon, spring } from "./ui";
 
 export type StashList = "people" | "aside";
 /**
- * One Stash card: a curator-confirmed person (their state survives the source post leaving the pool),
+ * One Stash card: a linked person (their state survives the source post leaving the pool),
  * or a lone post whose author isn't linked yet, which stays post-level and is never shown as a verified person.
  */
 export type StashEntry = { key: string; person: Person | null; choice: Choice | null; openedAt: number | null; source: Post | null };
@@ -16,7 +16,7 @@ export type StashEntry = { key: string; person: Person | null; choice: Choice | 
 const shortId = (id: string) => `…${id.slice(-6)}`;
 
 type RowActions = {
-  tags: Tags; embeds: boolean; busy: boolean; curator: boolean; focusId: string | null; onEnable: () => void;
+  tags: Tags; embeds: boolean; busy: boolean; focusId: string | null; onEnable: () => void;
   onOpen: (t: { post?: Post; person?: Person }) => void; onView: (p: Post) => void;
   onMove: (entry: StashEntry, choice: Choice | null) => void;
 };
@@ -30,10 +30,10 @@ type RowActions = {
  * the remaining links together. View post and Remove sit behind each row's "More". Posts without a
  * confirmed author, people you passed, and adding by link live in quieter sections below the list.
  */
-export function Stash({ dialogRef, open, onClose, browserOnly, lists, list, onList, preview, tagNames, onAdd, unopenedCount, onOpenAll, ...row }: {
+export function Stash({ dialogRef, open, onClose, browserOnly, lists, list, onList, onAdd, unopenedCount, onOpenAll, ...row }: {
   dialogRef: RefObject<HTMLDialogElement | null>; open: boolean; onClose: () => void; browserOnly: boolean;
-  lists: Record<StashList, StashEntry[]>; list: StashList; onList: (l: StashList) => void; preview: boolean; tagNames: string[];
-  onAdd: (url: string, shared: boolean, tags: string[], author: string) => Promise<string | null>;
+  lists: Record<StashList, StashEntry[]>; list: StashList; onList: (l: StashList) => void;
+  onAdd: (url: string) => Promise<string | null>;
   unopenedCount: number; onOpenAll: () => void;
 } & RowActions) {
   useEffect(() => {
@@ -84,14 +84,14 @@ export function Stash({ dialogRef, open, onClose, browserOnly, lists, list, onLi
       {lists.aside.length > 0 && <button className="shelf-link" onClick={() => onList("aside")}>Passed <small>{lists.aside.length}</small></button>}
       <details className="shelf-section">
         <summary>Add a post by link</summary>
-        <AddPost curator={row.curator} preview={preview} busy={row.busy} tagNames={tagNames} onAdd={onAdd} />
+        <AddPost busy={row.busy} onAdd={onAdd} />
       </details>
     </div>}
   </dialog>;
 }
 
 /**
- * A Stash row. A curator-confirmed person is one big link to their profile on X (our own link, so it's
+ * A Stash row. A linked person is one big link to their profile on X (our own link, so it's
  * recorded as opened); View post returns to the main view for the original invitation. A post whose
  * author isn't linked yet shows that post instead, since it's the only honest way to see who it is. Secondary actions live behind "More" so the list stays a list of people.
  */
@@ -99,7 +99,7 @@ function PersonRow({ entry, tags, embeds, busy, focusId, onEnable, onOpen, onVie
   const { person, source } = entry;
   const [more, setMore] = useState(false);
   const topics = source ? tags[source.id] ?? [] : [];
-  // The row's status line answers "have I opened them yet?"; curator confirmation is stated once in the header.
+  // The row's status line answers "have I opened them yet?".
   const meta = [entry.openedAt ? `Opened ${timeAgo(entry.openedAt)}` : person ? "Not opened yet" : source ? `Post ${shortId(source.id)}` : "",
     ...topics.map((t) => `#${t}`)].filter(Boolean).join(" · ");
   const label = person ? `@${person.handle}` : "Saved post";

@@ -23,7 +23,7 @@ export function DiscoveryFilters({ tags, selected, preview, onChange }: {
           </button>;
         })}
       </nav>
-      <p className="tagbar-note">{preview ? "Curator tags · preview" : tags.length ? "Hashtags checked by the curator" : "No curator tags yet."}</p>
+      <p className="tagbar-note">{preview ? "Preview hashtags" : tags.length ? "Hashtags in these posts" : "No hashtags available."}</p>
     </div>
   </div>;
 }

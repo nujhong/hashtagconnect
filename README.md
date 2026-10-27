@@ -2,7 +2,7 @@
 
 Compact brand: **#connect**. (Package, worker and storage identifiers still say `xconnect`; they are deliberately unchanged.)
 
-Grow your circle on X with people whose interests fit yours. Discover public invitations in a curator-managed pool. Posts appear as genuine official X embeds. You privately keep or pass the people behind them, then visit their profiles from Stash. Void + React on Cloudflare Workers + D1, animated with Motion.
+Grow your circle on X with people whose interests fit yours. Discovery is designed around a service-collected shared pool of public #connect posts. The prototype currently uses its existing seeded pool; collection is not connected yet. Posts appear as genuine official X embeds. You privately keep or pass the people behind them, then visit their profiles from Stash. Void + React on Cloudflare Workers + D1, animated with Motion.
 
 Design intent, colour and type roles, the embed boundary, motion and copy style are in [DESIGN.md](DESIGN.md). Code layout: `pages/index.tsx` holds page state and actions and composes the UI sections in `src/components/`. Pure helpers are in `src/people.ts` and `src/sandbox.ts`, the X widget loader is `src/x-embed.tsx`, and server code is in `src/server/` and `routes/api/`.
 
@@ -10,11 +10,11 @@ Design intent, colour and type roles, the embed boundary, motion and copy style 
 
 **Connected workspace.** The scan joins the official post and big controls on one graphite surface. Phones use a compact discovery toolbar and scan above the post, with decisions pinned to the bottom.
 
-- **Hashtag filters** sit in the controls, or a popover on mobile. Tags are what the curator checked in each post and are stored in D1. The signed-out sandbox uses its separate local tags.
+- **Hashtag filters** sit in the controls, or a popover on mobile. Filters use the hashtags stored with each post in D1. The signed-out sandbox uses its separate local tags.
 - **Keep / Pass.** The two big controls sit side by side. Each choice can be undone from the toast. Keeping sends a small sticker to the **Stash** counter. The official embed already links to X; a small app-owned post link appears only when the embed is off or unavailable.
-- **Stash** opens a private native dialog listing the people you kept. An **Open N tabs** action opens all remaining profile and unlinked-post links together. Only successfully opened tabs are marked; blocked tabs remain unopened, with guidance to allow pop-ups or use individual links. Each confirmed person appears once, as a link to their profile on X; **View post** returns to the main view; it and **Remove** sit behind the row's *More*. Saved posts without a confirmed author, *Passed* and *Add a post by link* are quieter sections below the list. Saved people survive removal of their source post. Members can save a URL privately; an unlinked URL remains explicitly post-level. The curator confirms the author's profile when publishing. Reconfirming an existing post preserves its previous keeps, passes and opened history.
-- **Platform membership.** Confirmed authors whose handles match a linked X account from its last sign-in show an “On hashtagconnect” badge inside the embed shell. Membership does not alter scan scores.
-- **Connected workspace.** The scan, original invitation and controls share one surface. The right-hand controls show the remaining people to connect and hashtag filters (curator-assigned in the live pool). Phones use a compact score, a filter popover and fixed Pass/Keep buttons.
+- **Stash** opens a private native dialog listing the people you kept. An **Open N tabs** action opens all remaining profile and unlinked-post links together. Only successfully opened tabs are marked; blocked tabs remain unopened, with guidance to allow pop-ups or use individual links. Each confirmed person appears once, as a link to their profile on X; **View post** returns to the main view; it and **Remove** sit behind the row's *More*. Saved posts without a confirmed author, *Passed* and *Add a post by link* are quieter sections below the list. Saved people survive removal of their source post. Members can save a URL privately; an unlinked URL remains explicitly post-level.
+- **Platform membership.** Confirmed authors whose handles match a linked X account from its last sign-in show an “On hashtagconnect” badge inside the embed shell. Being on the service is an additional signal of openness to connecting, displayed separately from text relevance.
+- **Connected workspace.** The scan, original invitation and controls share one surface. The right-hand controls show the remaining people to connect and hashtag filters (stored with the live pool). Phones use a compact score, a filter popover and fixed Pass/Keep buttons.
 - **Automatic bio scan.** Each post a signed-in member views is compared with their OAuth bio using its official oEmbed text through `POST /api/scan`. No extra click is needed. One native Jev Score question gives a text-relevance rating out of 100. Four Noul questions check useful detail, shared interests and related work. The result spans a full row, with two supporting probabilities stacked vertically; Sources holds the bio and post link. Methodology and logging details live in Settings. Uncertain comparisons are marked Tentative; missing information receives no rating. One optional private sentence can supplement the OAuth bio; there is no required interest questionnaire, timeline API call, bot verdict or compatibility percentage. A clearly labelled **fictional demo** works without signing in. A missing bio, an empty bio and provider failures have separate states. Local results stay fresh; production reuses unchanged inputs for a configured lifetime. Service and quota failures pause automatic scanning until Retry. See [scan implementation and live status](docs/profile-scan.md).
 - **What is recorded.** Your keeps, passes, clicks on our own profile or fallback post links, and successful tabs opened by the Stash action. Clicks inside X's iframe are not tracked. No follow or reply checks, no matching, no availability claims. Post dates and replies stay inside the embed.
 - **Embeds and privacy.** Embeds stay off until you choose to load them. Loading, unavailable and retry states are handled, and the widget follows the system theme. *Settings & privacy* turns embeds on or off and clears your Stash and history.
@@ -25,13 +25,11 @@ The sandbox is seeded with five real #connect posts picked by hand from X search
 
 **Grow your circle on X. Discover people who want to connect, with interests that fit yours.** The experiment is free; relevant follower growth is the purpose, without promising reach or follow-backs. Freshness is secondary.
 
-Signed-in visitors can submit an X profile and public post through **Get listed**, with one optional note. One current submission per account is stored privately until manual review; it never automatically enters the shared pool. The curator checks the author and invitation on X and publishes using the existing author-confirmation rules. Editing a published submission requests another review and does not remove the previous pool entry. Pending submissions are reviewed oldest first, 100 at a time. A version token prevents an old review from marking a newer edit as reviewed.
-
-Curators assign up to eight hashtags on publication; live filters use these stored tags. Existing entries start untagged. Re-add an existing URL through Stash’s shared-pool form to assign its tags without changing its original added date.
+Discovery is supplied by the service, shared across viewers. Authors do not need to join or request inclusion. The planned starting point is periodic #connect collection; its source and interval are still to be decided. There is no submission, approval or manual publishing flow in the app. Existing posts, people and private saves remain intact.
 
 **Your bio & settings** offers one optional private context sentence. The OAuth bio remains provider-owned. Clearing the sentence returns to bio-only comparisons; saving context invalidates that viewer’s cached results.
 
-First-party D1 measurement stores each account’s first Keep and first app-owned link opening, first/last active UTC day, distinct active-day count, and optional usefulness response. Curator review displays aggregate totals. Repeated visits on the same UTC day and repeated actions do not create new conversions. These measurements start when this feature is used; existing history is not backfilled. They do not verify follows, replies or relationships. Preview use is not measured. No external analytics service is added.
+First-party D1 measurement stores each account’s first Keep and first app-owned link opening, first/last active UTC day, distinct active-day count, and optional usefulness response. Measurement remains internal with no public reporting endpoint. Repeated visits on the same UTC day and repeated actions do not create new conversions. These measurements start when this feature is used; existing history is not backfilled. They do not verify follows, replies or relationships. Preview use is not measured. No external analytics service is added.
 
 ## Production configuration and migrations
 
@@ -50,7 +48,7 @@ The repository is undeployed and has **one initial schema migration**, including
 | Returning | Back at `/?auth=welcome`, a toast confirms who you're signed in as. Sandbox saves are not transferred. |
 | Cancelled | `?error=access_denied`: "Cancelled. Nothing was shared." with *Try again*. |
 | Error | Any other `?error=` code, including an expired or missing OAuth state (`onAPIError.errorURL` in `auth.ts`): *Try again* plus a reference code. |
-| Signed in | The avatar menu shows the account name and photo, a Curator badge for the curator, privacy settings and Sign out. |
+| Signed in | The avatar menu shows the account name and photo, privacy settings and Sign out. |
 | Sign out | Calls `auth.signOut()` and checks its `error` result. Success reloads with a confirmation toast. Failure says you're still signed in. |
 
 Each step change moves focus to the new step's heading, so keyboard and screen-reader users hear the new state.
@@ -68,9 +66,9 @@ npm run dev -- --host 127.0.0.1 --port 5173 --strictPort
 npm run check && npm test && npm run build
 ```
 
-X sign-in: create a confidential Web App in the X Developer Console with the callback `http://127.0.0.1:5173/api/auth/callback/twitter`, then set `AUTH_TWITTER_CLIENT_ID`, `AUTH_TWITTER_CLIENT_SECRET` and optionally `CURATOR_X_ID` (your numeric X account ID) in `.env`. Requested scopes are `tweet.read users.read`. Restart the dev server after changing auth config.
+X sign-in: create a confidential Web App in the X Developer Console with the callback `http://127.0.0.1:5173/api/auth/callback/twitter`, then set `AUTH_TWITTER_CLIENT_ID` and `AUTH_TWITTER_CLIENT_SECRET` in `.env`. Requested scopes are `tweet.read users.read`. Restart the dev server after changing auth config.
 
-The current local OAuth setup has been tested with a real sign-in. The bio is collected in the same `/2/users/me` profile lookup and refreshed on subsequent sign-ins. Existing sessions without a captured bio offer *Refresh X bio*; an account with an empty X bio gets a separate explanation. Profile edits through Better Auth's `/update-user` endpoint are disabled. Curator authorization and scans use Better Auth's trusted provider account ID. For scans, configure the Cloudflare account, gateway and inference credentials from `env.example`; no X bearer token is needed. Local scans are uncapped by the app when SCAN_DAILY_LIMIT is omitted. Production requires an explicit positive cap and SCAN_CACHE_TTL_SECONDS before scans can run. A positive value caps attempts per UTC day across all users; zero pauses model calls. Provider limits still apply. Gateway request logging is enabled. Gateway caching stays off; the app reuses validated results only in production.
+The current local OAuth setup has been tested with a real sign-in. The bio is collected in the same `/2/users/me` profile lookup and refreshed on subsequent sign-ins. Existing sessions without a captured bio offer *Refresh X bio*; an account with an empty X bio gets a separate explanation. Profile edits through Better Auth's `/update-user` endpoint are disabled. Scans use Better Auth's trusted provider account ID. For scans, configure the Cloudflare account, gateway and inference credentials from `env.example`; no X bearer token is needed. Local scans are uncapped by the app when SCAN_DAILY_LIMIT is omitted. Production requires an explicit positive cap and SCAN_CACHE_TTL_SECONDS before scans can run. A positive value caps attempts per UTC day across all users; zero pauses model calls. Provider limits still apply. Gateway request logging is enabled. Gateway caching stays off; the app reuses validated results only in production.
 
 ## Embed fixtures
 
@@ -81,24 +79,21 @@ For isolated browser comparisons, see [the standalone fixtures](fixtures/embeds/
 | Route | Purpose |
 | --- | --- |
 | GET /api/discover | Shared pool plus the viewer's private post and person records |
-| POST /api/import | Save a URL privately, or publish with a curator-confirmed author profile |
+| POST /api/import | Save a URL privately; only the URL is accepted |
 | POST /api/decisions | Set save, skip or clear a choice by postId or personId |
 | DELETE /api/decisions | Clear the viewer's choices and opened history |
 | POST /api/opened | Record a click on an app-owned profile or fallback post link |
-| DELETE /api/pool | Curator removes a post; saved people remain |
 | POST /api/scan | Authenticated bio/context / oEmbed-post comparison through Jev |
 | POST /api/context | Save or clear the viewer’s optional scan context |
-| GET / POST /api/submissions | Read or replace the viewer’s reviewable submission |
-| GET / POST /api/review | Curator-only pending list, aggregate metrics and review actions |
 | POST /api/activity | Record an active UTC day or optional usefulness feedback |
 
 ## Proposed, for discussion (not built)
 
-1. **Hashtag collector.** Still not approved. It would poll X API v2 recent search for the channel hashtags, which X bills per returned resource ([pricing](https://docs.x.com/x-api/getting-started/pricing)). It also needs a deletion and update mechanism to satisfy the [Developer Policy](https://docs.x.com/developer-terms/policy).
+1. **Hashtag collection.** Service-owned discovery is the agreed direction. Collection transport and polling interval remain undecided; no collection job or paid X search has been enabled.
 2. **Sandbox to account.** Optionally offer to import sandbox saves after sign-in. Today they aren't transferred.
-3. **Publication time.** Storing each post's creation time would allow honest freshness sorting. Today "added" is when the curator added the post.
+3. **Publication time.** Storing each post's creation time would allow honest freshness sorting. Today "added" is when the post entered the local database.
 
-Not deployed. The OAuth-bio / oEmbed-post path has been verified end to end in Personal Chrome through the existing momentium gateway, using the signed-in user's real bio and a curated post. Signed-in browsing now automatically requests a comparison for the current post. Guest browsing and the fictional demo never call Jev.
+Not deployed. The OAuth-bio / oEmbed-post path has been verified end to end in Personal Chrome through the existing momentium gateway, using the signed-in user's real bio and a seeded post. Signed-in browsing now automatically requests a comparison for the current post. Guest browsing and the fictional demo never call Jev.
 
 Known local issue: the first official embed can time out even for an available post; **Try again** has rendered it successfully. The container layout is independent of this unresolved widget initialization issue.
 

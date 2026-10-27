@@ -284,12 +284,6 @@ code { font: 12px var(--mono); padding: 1px 5px; border-radius: 5px; background:
 .shelf-section .add { margin: 0 4px 12px; padding-top: 0; border-top: none; }
 .shelf-head p { color: var(--muted); font-size: 12.5px; }
 .shelf-close { position: absolute; right: -8px; top: -8px; width: 36px; height: 36px; border: none; border-radius: 50%; background: none; font-size: 22px; color: var(--muted); }
-.seg { display: flex; padding: 3px; border-radius: 999px; background: var(--sunk); }
-.seg button { position: relative; flex: 1; display: inline-flex; align-items: baseline; justify-content: center; gap: 5px; height: 32px; padding: 0 8px; border: none; border-radius: 999px; background: none; font-size: 13px; color: var(--muted); white-space: nowrap; }
-.seg button[aria-selected="true"], .seg button[aria-checked="true"] { color: var(--ink); font-weight: 500; }
-.seg button > :not(.seg-pill) { position: relative; }
-.seg small { font: 11px var(--mono); }
-.seg-pill { position: absolute; inset: 0; border-radius: inherit; background: var(--surface); box-shadow: 0 1px 3px rgb(0 0 0 / 0.12); }
 .rows { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
 .rows li { display: flex; align-items: center; gap: 8px; padding: 8px 8px 8px 14px; border-radius: 14px; background: var(--bg); overflow: hidden; }
 .rows li.current { box-shadow: inset 0 0 0 1.5px var(--ink); }
@@ -306,9 +300,6 @@ code { font: 12px var(--mono); padding: 1px 5px; border-radius: 5px; background:
 .add input[type="url"] { flex: 1; min-width: 0; height: 40px; padding: 0 14px; border: 1px solid var(--line); border-radius: 999px; background: var(--bg); font-size: 13.5px; }
 .add input[aria-invalid="true"] { border-color: var(--danger); }
 .add .error { color: var(--danger); font-size: 12.5px; }
-.tag-pick { display: flex; flex-wrap: wrap; gap: 4px 12px; margin: 0; padding: 0; border: none; font-size: 13px; }
-.tag-pick legend { margin-bottom: 4px; font-size: 12.5px; color: var(--muted); }
-.tag-pick label { display: flex; gap: 5px; align-items: center; font: 400 13px var(--sans); }
 
 
 .foot { display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; padding: 0 16px 40px; color: var(--muted); font-size: 12.5px; }
@@ -492,9 +483,6 @@ a.person-open:hover { background: var(--sunk); }
 .person-tray, .person-note { padding: 0 10px 8px 62px; }
 .person-tray { display: flex; flex-wrap: wrap; gap: 8px; }
 .person-posts { display: grid; gap: 8px; padding: 0 4px 4px; }
-.add-author input { flex: 1; min-width: 0; height: 36px; padding: 0 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--bg); color: var(--ink); font-size: 13.5px; }
-.add-author { display: grid; gap: 6px; }
-.add-author .check { display: flex; gap: 8px; align-items: flex-start; color: var(--muted); font: 400 13px var(--sans); }
 /* Phones: the row keeps only the ↗ glyph, and the tray uses the full width. After the person rules so it wins. */
 @media (max-width: 520px) {
   .person-go { font-size: 0; }
@@ -517,21 +505,12 @@ a.person-open:hover { background: var(--sunk); }
 .community-form { display: grid; gap: 10px; margin-top: 16px; }
 .community-form label { font-weight: 600; }
 .community-form small { color: var(--muted); font-weight: 400; }
-.community-form input, .community-form textarea, .review-item input:not([type=checkbox]) { width: 100%; min-width: 0; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); padding: 12px; font: 400 16px/1.4 var(--sans); }
+.community-form input, .community-form textarea { width: 100%; min-width: 0; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); padding: 12px; font: 400 16px/1.4 var(--sans); }
 .community-form textarea { resize: vertical; }
 .community-form .btn { justify-self: start; }
 .community-form p { margin: 0; }
 .context-editor { margin: 20px 0; }
 .context-bio { margin: 12px 0; color: var(--muted); font-size: 14px; white-space: pre-wrap; }
-.submission-status { padding: 10px 0; border-bottom: 1px solid var(--line); }
-.review-item { display: grid; gap: 14px; padding: 24px 0; border-top: 1px solid var(--line); overflow-wrap: anywhere; }
-.review-item > a { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
-.review-item label { display: grid; gap: 8px; }
-.review-item label.check { display: flex; }
-.review-actions { display: flex; gap: 10px; }
-.experiment-metrics { margin: 16px 0; }
-.experiment-metrics > div { display: flex; justify-content: space-between; gap: 16px; margin: 10px 0; font-size: 14px; }
-.experiment-metrics dd { margin: 0; white-space: nowrap; }
 .foot { flex-wrap: wrap; gap: 12px 20px; }
 .connection-feedback { display: flex; flex-wrap: wrap; gap: 10px; width: 100%; font-size: 13px; }
 @media (max-width: 899px) {

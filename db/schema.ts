@@ -46,18 +46,6 @@ export const viewerContext = sqliteTable("viewer_context", {
   sentence: text("sentence").notNull(),
 });
 
-/** One reviewable submission per signed-in account; submissions never publish themselves. */
-export const submissions = sqliteTable("submissions", {
-  id: text("id").primaryKey(),
-  userId: text("user_id").notNull().unique(),
-  profileUrl: text("profile_url").notNull(),
-  postUrl: text("post_url").notNull(),
-  description: text("description").notNull(),
-  status: text("status", { enum: ["pending", "published", "declined"] }).notNull().default("pending"),
-  version: text("version").notNull(),
-  updatedAt: integer("updated_at").notNull(),
-}, (table) => [index("submissions_review").on(table.status, table.updatedAt)]);
-
 /** First-party milestones, not a log of profiles viewed or confirmed connections. */
 export const funnel = sqliteTable("funnel", {
   userId: text("user_id").primaryKey(),

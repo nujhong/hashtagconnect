@@ -23,7 +23,7 @@ export type PersonEntry = {
 
 export type Discovery = { posts: Post[]; people: PersonEntry[] };
 
-/** Profile links are supplied and confirmed by the curator, never inferred from a post URL. */
+/** Profile links are normalized separately from post URLs; a URL path does not establish its author. */
 export function profileFromInput(value: string): Omit<Person, "id"> | null {
   let handle = value.trim().replace(/^@/, "");
   if (handle.includes(":")) {

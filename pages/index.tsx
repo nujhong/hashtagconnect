@@ -2,10 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, MotionConfig, motion, useReducedMotion } from "motion/react";
 import { auth, fetch as api, FetchError } from "void/client";
 import type { Props } from "./index.server";
-import { dedupePeople, postFromUrl, profileFromInput, timeAgo, type Choice, type Discovery, type Person, type PersonEntry, type Post } from "../src/people";
+import { dedupePeople, postFromUrl, timeAgo, type Choice, type Discovery, type Person, type PersonEntry, type Post } from "../src/people";
 import { embedConsentKey, lettersKey, previewKey, restorePreview, type Tags } from "../src/sandbox";
 import { SignInSheet, beginXSignIn, readAuthReturn, type Account, type AuthStep } from "../src/components/auth";
-import { ConnectionFeedback, GetListed, Review } from "../src/components/community";
+import { ConnectionFeedback } from "../src/components/community";
 import { DiscoveryFilters } from "../src/components/discovery-filters";
 import { Decisions } from "../src/components/decisions";
 import { Invitation } from "../src/components/invitation";
@@ -22,7 +22,7 @@ import "./style.css";
  * from the server (every mutation returns the viewer's Discovery); signed-out visitors and the auth
  * preview use a browser sandbox (src/sandbox.ts).
  */
-// Hashtags are curator-assigned; the signed-out sandbox keeps its own local tags.
+// Discovery tags come from stored posts; the signed-out sandbox keeps its own local tags.
 const KNOWN_TAGS = ["connect", "building", "tech"];
 type Fly = { key: number; x1: number; y1: number; x2: number; y2: number };
 
@@ -34,7 +34,6 @@ function App(props: Props) {
   const reduced = useReducedMotion();
   const [previewAccount, setPreviewAccount] = useState(false);
   const preview = !props.user;
-  const canCurate = props.curator || preview;
   const [posts, setPosts] = useState<Post[]>(preview ? [] : props.posts);
   const [people, setPeople] = useState<PersonEntry[]>(preview ? [] : props.people);
   const [tags, setTags] = useState<Tags>(Object.fromEntries(props.posts.map((post) => [post.id, post.tags ?? []])));
@@ -47,9 +46,8 @@ function App(props: Props) {
   const [focusId, setFocusId] = useState<string | null>(null);
   const [list, setList] = useState<StashList>("people");
   const [shelf, setShelf] = useState(false);
-  const [modal, setModal] = useState<"privacy" | "listing" | "review" | null>(null);
+  const [modal, setModal] = useState<"privacy" | null>(null);
   const [authStep, setAuthStep] = useState<{ step: AuthStep; code?: string } | null>(null);
-  const [confirmRemove, setConfirmRemove] = useState(false);
   const [fly, setFly] = useState<Fly | null>(null);
   const [scanPause, setScanPause] = useState<string | null>(null);
   const [feedback, setFeedback] = useState(props.feedback);
@@ -88,8 +86,8 @@ function App(props: Props) {
   const unopened = unopenedTargets(lists.people);
   const tagNames = [...new Set([...(preview ? KNOWN_TAGS : []), ...Object.values(tags).flat()])];
   const account: Account | null = props.user
-    ? { ...props.user, image: props.user.image ?? null, curator: props.curator, preview: false }
-    : previewAccount ? { name: "Preview account", image: null, username: null, curator: true, preview: true } : null;
+    ? { ...props.user, image: props.user.image ?? null, preview: false }
+    : previewAccount ? { name: "Preview account", image: null, username: null, preview: true } : null;
 
   useEffect(() => {
     if (preview) { const restored = restorePreview(); setPosts(restored.posts); setTags(restored.tags); setSeeded(restored.seeded); }
@@ -109,7 +107,6 @@ function App(props: Props) {
       try { localStorage.setItem(previewKey, JSON.stringify({ posts, tags, seeded })); } catch { say("Browser storage is unavailable. Preview changes last until you reload."); }
     }
   }, [posts, tags, seeded, preview, ready]);
-  useEffect(() => { setConfirmRemove(false); }, [current?.id]);
   // Scans stay inline; opening Stash, a dialog or sign-in never creates another modal layer.
 
   /**
@@ -227,37 +224,27 @@ function App(props: Props) {
       say(`Opened ${opened.length} ${opened.length === 1 ? "tab" : "tabs"}.${blocked ? ` ${blocked} blocked. Allow pop-ups for this site, or use the individual links.` : ""}${failed ? ` Couldn’t save ${failed} to your opened history.` : ""}`);
     });
   }
-  /** The curator confirms the author’s profile when publishing a post to the pool. */
-  async function add(url: string, shared: boolean, picked: string[], author: string): Promise<string | null> {
+  /** A private URL save keeps an existing linked person, or an unlinked post in this viewer's Stash. */
+  async function add(url: string): Promise<string | null> {
     const parsed = postFromUrl(url);
     if (!parsed) return "Paste an HTTPS post link from x.com or twitter.com.";
     let failure: string | null = null;
     await run(async () => {
       try {
         if (preview) {
-          const profile = author ? profileFromInput(author) : null;
           setPosts((rows) => {
             const existing = rows.find((p) => p.id === parsed.id);
-            const person = existing?.person ?? (profile ? { ...profile, id: `sandbox:${profile.profileUrl}` } : null);
-            const next = { ...(existing ?? parsed), person, ...(shared ? { pooledAt: existing?.pooledAt ?? Date.now() } : { choice: "save" as const }) };
-            // A private save of a curator-linked post saves that person, so all their posts agree.
-            const rest = rows.filter((p) => p.id !== parsed.id).map((p) => !shared && person && p.person?.id === person.id ? { ...p, choice: "save" as const } : p);
+            const person = existing?.person ?? null;
+            const next = { ...(existing ?? parsed), person, choice: "save" as const };
+            // A linked person's choice applies across their posts.
+            const rest = rows.filter((p) => p.id !== parsed.id).map((p) => person && p.person?.id === person.id ? { ...p, choice: "save" as const } : p);
             return [next, ...rest];
           });
-          if (shared && picked.length) setTags((t) => ({ ...t, [parsed.id]: picked }));
-        } else apply(await api("/api/import", { method: "POST", body: { url, tags: shared ? picked : undefined, destination: shared ? "pool" : "queue", ...(author ? { profileUrl: author, profileConfirmed: true } : {}) } }));
-        if (shared) { setFocusId(null); say("Added to the shared pool."); }
-        else { setList("people"); say("Saved privately to your Stash."); }
+        } else apply(await api("/api/import", { method: "POST", body: { url } }));
+        setList("people"); say("Saved privately to your Stash.");
       } catch (error) { failure = errorMessage(error); }
     });
     return failure;
-  }
-  async function removeFromPool(post: Post) {
-    await run(async () => {
-      if (preview) setPosts((rows) => rows.filter((p) => p.id !== post.id));
-      else apply(await api("/api/pool", { method: "DELETE", body: { postId: post.id } }));
-      setFocusId(null); say("Removed from the pool for everyone.");
-    });
   }
   async function clearMine() {
     await run(async () => {
@@ -280,7 +267,7 @@ function App(props: Props) {
   const loaded = !preview || ready;
   const scanAccess: ScanAccess = props.user ? "signed-in" : previewAccount ? "preview" : "signed-out";
   const status = current?.choice === "save" ? "You kept this" : current?.choice === "skip" ? "You passed on this" : null;
-  const scope = preview ? (account ? "Preview session" : "Preview") : props.curator ? "Curator" : null;
+  const scope = preview ? (account ? "Preview session" : "Preview") : null;
   const scanPanel = current && <ScanPanel key={current.id} access={scanAccess} availability={props.scanAvailability} postId={current.id}
     pausedReason={scanPause} onPause={setScanPause} onResume={() => setScanPause(null)} onSignIn={signIn} />;
 
@@ -330,7 +317,7 @@ function App(props: Props) {
                 selected={filter} preview={preview} onChange={(next) => { setFilter(next); setFocusId(null); }} />
               <div className="panel-head">
                 <h1>{!loaded ? " " : focused ? <>Another look.</> : deck.length ? <><span className="queue-count"><Count value={deck.length} /></span> {deck.length === 1 ? "person" : "people"} <span className="br">to connect</span></> : <>All caught up.</>}</h1>
-                <p className="panel-sub">{focused ? "Change your mind any time." : deck.length ? "Keep someone in your Stash. Make the first move on X." : "New invitations show up when the curator adds them."}</p>
+                <p className="panel-sub">{focused ? "Change your mind any time." : deck.length ? "Keep someone in your Stash. Make the first move on X." : "Come back for more people to connect with."}</p>
               </div>
             </div>
 
@@ -340,9 +327,7 @@ function App(props: Props) {
               {current?.openedAt ? <>Opened on X {timeAgo(current.openedAt)}. </> : null}
               {!focused && deck.length > 1 ? <>{deck.length - 1} more after this. </> : null}
               {!account && <><button className="link" onClick={signIn}>Continue with X</button> to keep future saves on your account. </>}
-              {canCurate && current?.pooledAt != null && (confirmRemove
-                ? <span className="confirm">Remove for everyone, with every save and history? <button className="link danger" onClick={() => removeFromPool(current)}>Remove</button> <button className="link" onClick={() => setConfirmRemove(false)}>Keep it</button></span>
-                : <button className="link" onClick={() => setConfirmRemove(true)}>Remove from pool</button>)}
+
             </p>
           </aside>
         </div>
@@ -350,14 +335,12 @@ function App(props: Props) {
 
       <Stash dialogRef={shelfRef} open={shelf} onClose={() => setShelf(false)} browserOnly={preview && !account}
         lists={lists} list={list} onList={setList} focusId={focusId} tags={tags} embeds={embeds} busy={pending}
-        curator={canCurate} preview={preview} tagNames={tagNames} onEnable={() => setConsent(true)}
+        onEnable={() => setConsent(true)}
         unopenedCount={unopened.length} onOpenAll={openStash}
         onOpen={markOpened} onView={show} onMove={moveEntry} onAdd={add} />
     </div>
 
     <footer className="foot">
-      <button className="link" onClick={() => props.user ? setModal("listing") : signIn()}>Get listed</button>
-      {props.curator && <button className="link" onClick={() => setModal("review")}>Curator review</button>}
       <button className="link" onClick={() => setModal("privacy")}>{props.user ? "Your bio & settings" : "Settings & privacy"}</button>
       {!props.authReady && !props.user && <span>X sign-in isn’t configured here, so sign-in runs as a preview.</span>}
       {props.user && hasOpened && feedback === null && <ConnectionFeedback onAnswer={async (useful) => {
@@ -375,8 +358,6 @@ function App(props: Props) {
       onStep={(step, code) => setAuthStep({ step, code })} onClose={() => setAuthStep(null)}
       onPreviewReturn={() => { setAuthStep(null); setPreviewAccount(true); say("Preview sign-in. No real session was created."); }} />}
 
-    {modal === "listing" && props.user && <GetListed username={props.user.username} onClose={() => setModal(null)} />}
-    {modal === "review" && props.curator && <Review onClose={() => setModal(null)} onPublished={() => { void api("/api/discover").then(apply).catch(() => say("Refresh to load the updated pool.")); }} />}
     {modal === "privacy" && <Settings context={props.user ? { bio: props.bio, sentence: props.context } : undefined} embeds={embeds} letters={letters} busy={pending}
       onConsent={setConsent} onLetters={setLetterShortcuts} onClear={clearMine} onClose={() => setModal(null)} />}
   </div>;

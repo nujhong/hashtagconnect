@@ -38,7 +38,7 @@ The page and API share readiness checks. Browser props contain status and an exp
 ## Verification and local setup
 
 - Native Better Auth sign-in and repeat-sign-in tests verify bio persistence, refresh, stable account identity and rejection of direct profile edits with stubbed X responses.
-- Live OAuth collected the personal account's bio. An end-to-end scan in Personal Chrome compared that bio with a real curated connect post and displayed a tentative connection through the existing momentium gateway. No user bio or saved-person record was replaced.
+- Live OAuth collected the personal account's bio. An end-to-end scan in Personal Chrome compared that bio with a real seeded connect post and displayed a tentative connection through the existing momentium gateway. No user bio or saved-person record was replaced.
 - The original Choice design confused category uncertainty with missing evidence. The Score/Noul design now tests relevance, evidence availability and supporting signals separately; regression tests verify that uncertainty does not discard a supported rating or change its value.
 - A bounded live gateway test of the new five-question request succeeded using the previously captured bio and oEmbed evidence. It returned a valid Jev 1.13.0 Score and four Noul answers without any new X API or timeline request.
 - Tests verify one unauthenticated oEmbed read, no timeline calls, no inference with missing inputs, typed probability validation, uncertain versus insufficient results and sanitized provider failures.

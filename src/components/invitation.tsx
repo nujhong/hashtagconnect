@@ -9,7 +9,7 @@ export function Invitation({ post, embeds, onEnable, onOpen }: {
   return <PostFrame id={post.id} embeds={embeds} onEnable={onEnable}
     header={<>
       {post.person && <strong>@{post.person.handle}</strong>}
-      {post.person?.onPlatform && <span className="member-badge" title="Linked X account, as of their last sign-in">On hashtagconnect</span>}
+      {post.person?.onPlatform && <span className="member-badge" title="Also here to connect">On hashtagconnect</span>}
       <span className="original-label">Original post</span>
     </>}
     fallback={<OpenLink post={post} onOpen={(p) => onOpen({ post: p })} className="btn sm" />} />;
