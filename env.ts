@@ -1,6 +1,7 @@
 import { defineEnv, number, string } from "void/env";
 
 export default defineEnv({
+  INGESTION_TOKEN: string().optional(),
   AUTH_TWITTER_CLIENT_ID: string().optional(),
   AUTH_TWITTER_CLIENT_SECRET: string().optional(),
   CLOUDFLARE_ACCOUNT_ID: string().optional(),
