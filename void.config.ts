@@ -8,6 +8,9 @@ export default defineConfig({
   },
   cloudflare: {
     name: "hashtagconnect",
+    workers_dev: true,
+    preview_urls: true,
+    routes: [],
     account_id: "21f45a2a8793aab5564e155efbee03fb",
     browser: { binding: "BROWSER", remote: true },
     observability: { enabled: true, traces: { enabled: true } },
@@ -25,7 +28,7 @@ export default defineConfig({
       // ponytail: one theme-color; Void's head renders only name/property/content (no media) and dedupes by name.
       { name: "theme-color", content: "#f4f3ef" },
       { name: "color-scheme", content: "light dark" },
-      // Share card. og:image must become an absolute URL once there is a production domain, or X shows no image.
+      // Share cards require an absolute image URL.
       { property: "og:type", content: "website" },
       { property: "og:site_name", content: "hashtagconnect" },
       { property: "og:title", content: "hashtagconnect · Find your first circle on X" },
@@ -33,7 +36,7 @@ export default defineConfig({
         property: "og:description",
         content: "Meet people interested in what you share, create or sell.",
       },
-      { property: "og:image", content: "/og.png" },
+      { property: "og:image", content: "https://hashtagconnect.kinetics.workers.dev/og.png" },
       { property: "og:image:width", content: "1200" },
       { property: "og:image:height", content: "630" },
       { property: "og:image:alt", content: "hashtagconnect: Find your first circle on X." },

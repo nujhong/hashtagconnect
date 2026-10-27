@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "source": {
+    "name": "hashtagconnect",
+    "workers_dev": true,
+    "preview_urls": true,
+    "routes": [],
+    "account_id": "21f45a2a8793aab5564e155efbee03fb",
+    "browser": {
+      "binding": "BROWSER",
+      "remote": true
+    },
+    "observability": {
+      "enabled": true,
+      "traces": {
+        "enabled": true
+      }
+    }
+  },
+  "resolved": {
+    "name": "hashtagconnect",
+    "workers_dev": true,
+    "preview_urls": true,
+    "account_id": "21f45a2a8793aab5564e155efbee03fb",
+    "browser": {
+      "binding": "BROWSER",
+      "remote": true
+    },
+    "observability": {
+      "enabled": true,
+      "traces": {
+        "enabled": true
+      }
+    },
+    "compatibility_date": "2026-02-24",
+    "d1_databases": [
+      {
+        "binding": "DB",
+        "database_name": "hashtagconnect-db",
+        "database_id": "a8cd998f-f740-481d-ad9f-cf5d7fa67972",
+        "migrations_dir": "./db/migrations"
+      }
+    ],
+    "routes": []
+  },
+  "text": "{\n  \"name\": \"hashtagconnect\",\n  \"workers_dev\": true,\n  \"preview_urls\": true,\n  \"account_id\": \"21f45a2a8793aab5564e155efbee03fb\",\n  \"browser\": {\n    \"binding\": \"BROWSER\",\n    \"remote\": true\n  },\n  \"observability\": {\n    \"enabled\": true,\n    \"traces\": {\n      \"enabled\": true\n    }\n  },\n  \"compatibility_date\": \"2026-02-24\",\n  \"d1_databases\": [\n    {\n      \"binding\": \"DB\",\n      \"database_name\": \"hashtagconnect-db\",\n      \"database_id\": \"a8cd998f-f740-481d-ad9f-cf5d7fa67972\",\n      \"migrations_dir\": \"./db/migrations\"\n    }\n  ],\n  \"routes\": []\n}\n"
+}
