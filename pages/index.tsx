@@ -611,6 +611,9 @@ function App(props: Props) {
                 <EvidenceCards
                   evidence={postLayer?.evidence ?? []}
                   spots={corded && postLayer ? postLayer.spots : null}
+                  scanning={postLayer?.scanning ?? false}
+                  scored={postLayer?.scored ?? false}
+                  onProfile={() => setModal("privacy")}
                 />
                 <div className="panel-top">
                   <DiscoveryFilters

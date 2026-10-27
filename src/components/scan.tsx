@@ -99,6 +99,7 @@ export function ScanPanel({
     onLayer({
       postId,
       scanning,
+      scored: Boolean(live),
       evidence,
       spots: postSpots(evidence),
       image: live?.boxImage ?? null,

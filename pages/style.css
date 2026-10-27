@@ -2812,3 +2812,11 @@ label.set-row {
     display: none;
   }
 }
+
+/* Evidence slot states: shimmering placeholders while scanning, and a quiet dashed card when nothing stood out. */
+.evidence.is-pending .ev { box-shadow: none; border-color: var(--line); animation: breathe 1.2s ease-in-out infinite; }
+.evidence .ghost { display: block; height: 18px; border-radius: 6px; background: var(--sunk); }
+.evidence .ghost.short { width: 40%; height: 11px; margin-bottom: 4px; }
+.ev-empty { gap: 6px; border-style: dashed; border-color: var(--faint); background: none; box-shadow: none; }
+.ev-empty b { font: 700 16px/1.25 var(--display); letter-spacing: -0.015em; }
+.ev-empty .link { justify-self: start; margin-top: 2px; color: var(--scan-text); font-size: 13px; }

@@ -14,6 +14,8 @@ export type Evidence = { phrase: ScanPhrase; index: number };
 export type PostLayer = {
   postId: string;
   scanning: boolean;
+  /** A result arrived for this post, so an empty `evidence` means nothing stood out, not "not scanned yet". */
+  scored: boolean;
   evidence: Evidence[];
   spots: Spot[];
   image: { width: number; height: number } | null;
