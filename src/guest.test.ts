@@ -1,7 +1,7 @@
 import { test } from "vite-plus/test";
 import assert from "node:assert/strict";
 import { postFromUrl } from "./people.ts";
-import { guestKey, restoreGuest } from "./guest.ts";
+import { guestKey, restoreGuest, importGuestState } from "./guest.ts";
 
 const saved = {
   posts: [
@@ -80,4 +80,47 @@ test("refresh merges new pool posts with guest choices without resurrecting with
   const withdrawn = restoreGuest(storage, []);
   assert.equal(withdrawn.posts[0].pooledAt, null);
   assert.equal(withdrawn.posts[0].choice, "save");
+});
+
+test("guest import keeps local saves on failure and clears them only after every batch succeeds", async () => {
+  const original = JSON.stringify({
+    posts: Array.from({ length: 51 }, (_, i) => ({
+      ...saved.posts[0],
+      url: `https://x.com/example/status/${1000 + i}`,
+    })),
+    tags: {},
+  });
+  let value = original;
+  const storage = {
+    getItem: () => value,
+    setItem: (_key: string, next: string) => {
+      value = next;
+    },
+  };
+  let calls = 0;
+  await assert.rejects(
+    importGuestState(storage, async () => {
+      if (++calls === 2) throw new Error("offline");
+    }),
+    /offline/,
+  );
+  assert.equal(value, original);
+  const batches: number[] = [];
+  assert.equal(
+    await importGuestState(storage, async (entries) => {
+      batches.push(entries.length);
+      assert.equal(entries[0].choice, "save");
+      assert.equal(entries[0].openedAt, 2);
+      assert.equal(value, original);
+    }),
+    true,
+  );
+  assert.deepEqual(batches, [50, 1]);
+  assert.deepEqual(JSON.parse(value), { posts: [], tags: {} });
+  assert.equal(
+    await importGuestState(storage, async () => {
+      assert.fail("already imported");
+    }),
+    false,
+  );
 });

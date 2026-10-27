@@ -68,3 +68,22 @@ export function restoreGuest(
     tags: { ...tags, ...Object.fromEntries(pool.map((post) => [post.id, post.tags ?? []])) },
   };
 }
+
+export type GuestDecision = { postId: string; choice: Post["choice"]; openedAt: number | null };
+
+/** Keep the browser copy until every batch succeeds, so an interrupted sign-in can retry. */
+export async function importGuestState(
+  storage: Pick<Storage, "getItem" | "setItem">,
+  submit: (entries: GuestDecision[]) => Promise<unknown>,
+): Promise<boolean> {
+  const entries = restoreGuest(storage).posts.map((post) => ({
+    postId: post.id,
+    choice: post.choice,
+    openedAt: Number.isSafeInteger(post.openedAt) && post.openedAt! >= 0 ? post.openedAt : null,
+  }));
+  if (!entries.length) return false;
+  for (let i = 0; i < entries.length; i += 50) await submit(entries.slice(i, i + 50));
+  // An empty current key also prevents the legacy key from being restored again.
+  storage.setItem(guestKey, JSON.stringify({ posts: [], tags: {} }));
+  return true;
+}

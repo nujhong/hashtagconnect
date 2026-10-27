@@ -14,7 +14,7 @@ import {
   type PersonEntry,
   type Post,
 } from "~/src/people";
-import { shortcutsKey, guestKey, restoreGuest, type Tags } from "~/src/guest";
+import { shortcutsKey, guestKey, restoreGuest, importGuestState, type Tags } from "~/src/guest";
 import {
   SignInSheet,
   beginXSignIn,
@@ -140,6 +140,17 @@ function App(props: Props) {
       const restored = restoreGuest(localStorage, props.posts);
       setPosts(restored.posts);
       setTags(restored.tags);
+    } else {
+      void run(async () => {
+        try {
+          const imported = await importGuestState(localStorage, (entries) =>
+            api("/api/me/guest-state", { method: "POST", body: { entries } }),
+          );
+          if (imported) apply(await api("/api/discovery"));
+        } catch {
+          say("Couldn’t sync your guest Stash. It’s still saved here; refresh to retry.");
+        }
+      });
     }
     try {
       setShortcuts(localStorage.getItem(shortcutsKey) !== "off");
