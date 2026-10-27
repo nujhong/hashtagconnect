@@ -84,3 +84,9 @@ export const scanCache = sqliteTable(
   },
   (table) => [primaryKey({ columns: [table.userId, table.postId] })],
 );
+
+/** Shared Browser Run admissions; failed attempts remain charged to the UTC month. */
+export const browserRunUsage = sqliteTable("browser_run_usage", {
+  month: text("month").primaryKey(),
+  runs: integer("runs").notNull(),
+});

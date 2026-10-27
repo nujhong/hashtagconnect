@@ -1,6 +1,7 @@
 import { and, eq, type DrizzleD1Database } from "void/db";
 import { viewerContext } from "../../db/schema.ts";
 import { bioProjectLinks, type ProjectDraft, type ProjectImport } from "../project-profile.ts";
+import { BrowserRunBudgetError } from "./browser-run-budget.ts";
 import { ProjectReadError } from "./project-profile.ts";
 
 type Database = DrizzleD1Database<typeof import("../../db/schema.ts")>;
@@ -66,7 +67,7 @@ export async function importBioProject(
       .where(ownsRead);
   } catch (error) {
     const reason =
-      error instanceof ProjectReadError
+      error instanceof ProjectReadError || error instanceof BrowserRunBudgetError
         ? error.message
         : "Couldn’t read the project in your bio. You can try again in Settings.";
     await db

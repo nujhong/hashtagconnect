@@ -1,5 +1,7 @@
 import { defineHandler } from "void";
 import { requireAuth } from "void/auth";
+import { db } from "void/db";
+import { BrowserRunBudgetError, reserveBrowserRun } from "~/src/server/browser-run-budget";
 import { env } from "void/env";
 import { z } from "zod";
 import { projectUrl } from "~/src/project-profile";
@@ -16,17 +18,18 @@ export const POST = defineHandler.withValidator({ body: z.object({ url: projectU
   if (setup.status !== "ready")
     return c.json({ error: "The profile builder isn’t connected yet." }, 503);
   try {
+    await reserveBrowserRun(db);
     const draft = await buildProjectProfile(c.env.BROWSER, setup.jev, body.url);
     return { draft };
   } catch (error) {
     return c.json(
       {
         error:
-          error instanceof ProjectReadError
+          error instanceof ProjectReadError || error instanceof BrowserRunBudgetError
             ? error.message
             : "Couldn’t read that project. Try again shortly.",
       },
-      502,
+      error instanceof BrowserRunBudgetError ? 429 : 502,
     );
   }
 });

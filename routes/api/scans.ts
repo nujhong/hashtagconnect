@@ -5,6 +5,7 @@ import { env } from "void/env";
 import { scanCache, viewerContext } from "@schema";
 import { z } from "zod";
 import { requirePostAccess } from "~/src/server/discovery";
+import { reserveBrowserRun } from "~/src/server/browser-run-budget";
 import { capturePostImage } from "~/src/server/post-image";
 import { evaluateProfiles, locateEvidence } from "~/src/server/jev";
 import { loadPublicEvidence, XEvidenceError } from "~/src/server/x-evidence";
@@ -56,10 +57,12 @@ export const POST = defineHandler.withValidator({
       );
     if (cached) return cached.result;
     // The screenshot renders while the text request runs; only then are the strong phrases located in it.
-    const capture = capturePostImage(c.env.BROWSER, body.postId).catch(() => {
-      console.warn("scan.post_image_unavailable", { postId: body.postId });
-      return undefined;
-    });
+    const capture = reserveBrowserRun(db)
+      .then(() => capturePostImage(c.env.BROWSER, body.postId))
+      .catch(() => {
+        console.warn("scan.post_image_unavailable", { postId: body.postId });
+        return undefined;
+      });
     let result = await evaluateProfiles(setup.jev, evidence);
     const image = await capture;
     if (result.status === "ok" && image) result = await locateEvidence(setup.jev, result, image);

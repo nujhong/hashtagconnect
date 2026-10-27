@@ -8,6 +8,13 @@
       "when": 1793068357216,
       "tag": "20261027023237_initial",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1793095633979,
+      "tag": "20261027100713_browser_run_budget",
+      "breakpoints": true
     }
   ]
 }
