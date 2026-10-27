@@ -5,6 +5,7 @@ import type { Props } from "./index.server";
 import { dedupePeople, postFromUrl, profileFromInput, timeAgo, type Choice, type Discovery, type Person, type PersonEntry, type Post } from "../src/people";
 import { embedConsentKey, lettersKey, previewKey, restorePreview, type Tags } from "../src/sandbox";
 import { SignInSheet, beginXSignIn, readAuthReturn, type Account, type AuthStep } from "../src/components/auth";
+import { ConnectionFeedback, GetListed, Review } from "../src/components/community";
 import { DiscoveryFilters } from "../src/components/discovery-filters";
 import { Decisions } from "../src/components/decisions";
 import { Invitation } from "../src/components/invitation";
@@ -21,7 +22,7 @@ import "./style.css";
  * from the server (every mutation returns the viewer's Discovery); signed-out visitors and the auth
  * preview use a browser sandbox (src/sandbox.ts).
  */
-// ponytail: hashtag tags are curator-assigned and preview-only; the database has no tag column yet (README §Proposed).
+// Hashtags are curator-assigned; the signed-out sandbox keeps its own local tags.
 const KNOWN_TAGS = ["connect", "building", "tech"];
 type Fly = { key: number; x1: number; y1: number; x2: number; y2: number };
 
@@ -36,7 +37,7 @@ function App(props: Props) {
   const canCurate = props.curator || preview;
   const [posts, setPosts] = useState<Post[]>(preview ? [] : props.posts);
   const [people, setPeople] = useState<PersonEntry[]>(preview ? [] : props.people);
-  const [tags, setTags] = useState<Tags>({});
+  const [tags, setTags] = useState<Tags>(Object.fromEntries(props.posts.map((post) => [post.id, post.tags ?? []])));
   const [seeded, setSeeded] = useState<string[]>([]);
   const [filter, setFilter] = useState<string[]>([]);
   const [ready, setReady] = useState(false);
@@ -46,11 +47,13 @@ function App(props: Props) {
   const [focusId, setFocusId] = useState<string | null>(null);
   const [list, setList] = useState<StashList>("people");
   const [shelf, setShelf] = useState(false);
-  const [modal, setModal] = useState<"privacy" | null>(null);
+  const [modal, setModal] = useState<"privacy" | "listing" | "review" | null>(null);
   const [authStep, setAuthStep] = useState<{ step: AuthStep; code?: string } | null>(null);
   const [confirmRemove, setConfirmRemove] = useState(false);
   const [fly, setFly] = useState<Fly | null>(null);
   const [scanPause, setScanPause] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState(props.feedback);
+  const [hasOpened, setHasOpened] = useState(props.hasOpened);
   const [letters, setLetters] = useState(true);
   // A shortcut briefly shows its button pressed, so keyboard choices feel as physical as clicks.
   const [hit, setHit] = useState<Choice | null>(null);
@@ -83,7 +86,7 @@ function App(props: Props) {
   ];
   const lists: Record<StashList, StashEntry[]> = { people: stash("save"), aside: stash("skip") };
   const unopened = unopenedTargets(lists.people);
-  const tagNames = [...new Set([...KNOWN_TAGS, ...Object.values(tags).flat()])];
+  const tagNames = [...new Set([...(preview ? KNOWN_TAGS : []), ...Object.values(tags).flat()])];
   const account: Account | null = props.user
     ? { ...props.user, image: props.user.image ?? null, curator: props.curator, preview: false }
     : previewAccount ? { name: "Preview account", image: null, username: null, curator: true, preview: true } : null;
@@ -93,6 +96,7 @@ function App(props: Props) {
     try { setEmbeds(localStorage.getItem(embedConsentKey) === "yes"); } catch { /* Consent remains off when storage is blocked. */ }
     try { setLetters(localStorage.getItem(lettersKey) !== "off"); } catch { /* Letter shortcuts stay on for this visit. */ }
     setReady(true);
+    if (props.user) void api("/api/activity", { method: "POST", body: { event: "visit" } }).catch(() => { /* Measurement must not block browsing. */ });
     const back = readAuthReturn();
     if (back.step) setAuthStep({ step: back.step, code: back.code });
     if (back.returned && props.user) say(`Signed in as ${props.user.username ? `@${props.user.username}` : props.user.name}.`);
@@ -138,7 +142,7 @@ function App(props: Props) {
 
   function say(text: string, undo?: () => void) { setNotice({ text, undo }); }
   /** Server responses are the source of truth: every mutation returns the viewer's whole Discovery. */
-  function apply(d: Discovery) { setPosts(d.posts); setPeople(d.people); }
+  function apply(d: Discovery) { setPosts(d.posts); setPeople(d.people); setTags(Object.fromEntries(d.posts.map((post) => [post.id, post.tags ?? []]))); }
   /** In the sandbox, a linked post's state belongs to its person, so it changes on all their posts. */
   function patchLocal(target: { post?: Post; person?: Person }, changes: Partial<Post>) {
     const pid = target.person?.id ?? target.post?.person?.id;
@@ -182,7 +186,7 @@ function App(props: Props) {
       setLeaving(choice);
       if (choice === "save") flyKeep();
       await setChoice(post, choice);
-      const text = choice === "save" ? "Kept. They’re in your Stash." : choice === "skip" ? "Passed. They won’t come round again." : before === "save" ? "Taken out of your Stash. Opened history stays." : "Back in your queue.";
+      const text = choice === "save" ? "Kept. Open their profile from Stash." : choice === "skip" ? "Passed. They won’t come round again." : before === "save" ? "Taken out of your Stash. Opened history stays." : "Back in your queue.";
       say(text, () => void run(() => setChoice({ ...post, choice }, before)));
     });
   }
@@ -207,6 +211,7 @@ function App(props: Props) {
       const openedAt = preview ? Date.now() : (await api("/api/opened", { method: "POST", body: target.person ? { personId: target.person.id } : { postId: target.post!.id } })).openedAt;
       // Patch only this opening; overlapping link clicks must not replace newer discovery state.
       patchLocal(target, { openedAt });
+      setHasOpened(true);
       const personId = target.person?.id ?? target.post?.person?.id;
       if (personId) setPeople((rows) => rows.map((row) => row.person.id === personId ? { ...row, openedAt, updatedAt: openedAt } : row));
     }
@@ -240,7 +245,7 @@ function App(props: Props) {
             return [next, ...rest];
           });
           if (shared && picked.length) setTags((t) => ({ ...t, [parsed.id]: picked }));
-        } else apply(await api("/api/import", { method: "POST", body: { url, destination: shared ? "pool" : "queue", ...(author ? { profileUrl: author, profileConfirmed: true } : {}) } }));
+        } else apply(await api("/api/import", { method: "POST", body: { url, tags: shared ? picked : undefined, destination: shared ? "pool" : "queue", ...(author ? { profileUrl: author, profileConfirmed: true } : {}) } }));
         if (shared) { setFocusId(null); say("Added to the shared pool."); }
         else { setList("people"); say("Saved privately to your Stash."); }
       } catch (error) { failure = errorMessage(error); }
@@ -284,6 +289,8 @@ function App(props: Props) {
     <TopBar scope={scope} preview={preview} stashCount={lists.people.length} stashOpen={shelf} letters={letters} account={account}
       scanPolicy={props.user ? props.scanPolicy : null} scanPause={scanPause}
       onStash={() => setShelf(!shelf)} onSettings={() => setModal("privacy")} onSignIn={signIn} onSignOut={signOut} />
+
+    {!props.user && <section className="welcome" aria-label="About hashtagconnect"><h1>Grow your circle on X.</h1><p>Discover people who want to connect, with interests that fit yours.</p><p className="fine">Keep people in your Stash, then open their profiles to connect on X.</p></section>}
 
     <div className={`layout${loaded ? "" : " is-loading"}`}>
       <div className="workspace">
@@ -349,8 +356,13 @@ function App(props: Props) {
     </div>
 
     <footer className="foot">
-      <button className="link" onClick={() => setModal("privacy")}>Settings & privacy</button>
+      <button className="link" onClick={() => props.user ? setModal("listing") : signIn()}>Get listed</button>
+      {props.curator && <button className="link" onClick={() => setModal("review")}>Curator review</button>}
+      <button className="link" onClick={() => setModal("privacy")}>{props.user ? "Your bio & settings" : "Settings & privacy"}</button>
       {!props.authReady && !props.user && <span>X sign-in isn’t configured here, so sign-in runs as a preview.</span>}
+      {props.user && hasOpened && feedback === null && <ConnectionFeedback onAnswer={async (useful) => {
+        await api("/api/activity", { method: "POST", body: { event: "feedback", useful } }); setFeedback(useful);
+      }} />}
     </footer>
 
     <AnimatePresence>{fly && <motion.span key={fly.key} className="fly" aria-hidden="true"
@@ -363,7 +375,9 @@ function App(props: Props) {
       onStep={(step, code) => setAuthStep({ step, code })} onClose={() => setAuthStep(null)}
       onPreviewReturn={() => { setAuthStep(null); setPreviewAccount(true); say("Preview sign-in. No real session was created."); }} />}
 
-    {modal === "privacy" && <Settings embeds={embeds} letters={letters} busy={pending}
+    {modal === "listing" && props.user && <GetListed username={props.user.username} onClose={() => setModal(null)} />}
+    {modal === "review" && props.curator && <Review onClose={() => setModal(null)} onPublished={() => { void api("/api/discover").then(apply).catch(() => say("Refresh to load the updated pool.")); }} />}
+    {modal === "privacy" && <Settings context={props.user ? { bio: props.bio, sentence: props.context } : undefined} embeds={embeds} letters={letters} busy={pending}
       onConsent={setConsent} onLetters={setLetterShortcuts} onClear={clearMine} onClose={() => setModal(null)} />}
   </div>;
 }

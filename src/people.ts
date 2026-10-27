@@ -10,6 +10,7 @@ export type Post = {
   choice: Choice | null;
   openedAt: number | null;
   person: Person | null;
+  tags?: string[];
 };
 
 export type PersonEntry = {

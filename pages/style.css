@@ -505,3 +505,40 @@ a.person-open:hover { background: var(--sunk); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* Supporting flows use the same plain type, graphite sheets and native form controls. */
+.welcome { max-width: 900px; margin: 20px 0 32px; }
+.welcome h1 { font: 800 clamp(30px, 4vw, 52px)/1.02 var(--display); letter-spacing: -0.045em; margin: 0 0 10px; }
+.welcome p { margin: 6px 0; }
+.scan-reason { max-width: 46ch; font: 800 26px/1.15 var(--display); letter-spacing: -0.025em; margin: 0 0 6px; }
+.scan-score { font-size: 40px; }
+.scan-score span { font-size: 18px; }
+.scan-rating-copy p { font-size: 18px; }
+.community-form { display: grid; gap: 10px; margin-top: 16px; }
+.community-form label { font-weight: 600; }
+.community-form small { color: var(--muted); font-weight: 400; }
+.community-form input, .community-form textarea, .review-item input:not([type=checkbox]) { width: 100%; min-width: 0; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); padding: 12px; font: 400 16px/1.4 var(--sans); }
+.community-form textarea { resize: vertical; }
+.community-form .btn { justify-self: start; }
+.community-form p { margin: 0; }
+.context-editor { margin: 20px 0; }
+.context-bio { margin: 12px 0; color: var(--muted); font-size: 14px; white-space: pre-wrap; }
+.submission-status { padding: 10px 0; border-bottom: 1px solid var(--line); }
+.review-item { display: grid; gap: 14px; padding: 24px 0; border-top: 1px solid var(--line); overflow-wrap: anywhere; }
+.review-item > a { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+.review-item label { display: grid; gap: 8px; }
+.review-item label.check { display: flex; }
+.review-actions { display: flex; gap: 10px; }
+.experiment-metrics { margin: 16px 0; }
+.experiment-metrics > div { display: flex; justify-content: space-between; gap: 16px; margin: 10px 0; font-size: 14px; }
+.experiment-metrics dd { margin: 0; white-space: nowrap; }
+.foot { flex-wrap: wrap; gap: 12px 20px; }
+.connection-feedback { display: flex; flex-wrap: wrap; gap: 10px; width: 100%; font-size: 13px; }
+@media (max-width: 899px) {
+  .welcome { margin: 12px 0 20px; }
+  .welcome p { font-size: 14px; }
+  .scan-reason { font-size: 21px; margin-bottom: 4px; }
+  .scan-score { font-size: 28px; }
+  .scan-score span { font-size: 13px; }
+  .scan-rating-copy p { font-size: 14px; }
+}

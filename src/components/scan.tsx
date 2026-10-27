@@ -12,8 +12,8 @@ import { scheduleScan } from "../auto-scan";
  * Results compare the OAuth bio with one connect post, show their sources, and state the unknowns:
  * a text-relevance rating, not relationship compatibility or a human/bot verdict.
  * Scans run automatically for the current post, in a full-width row above the invitation and decisions.
- * Leaving cancels the pending client request; revisiting starts fresh. Service failures pause
- * automatic scanning across posts until the user retries. Results are not cached.
+ * Leaving cancels the pending client request. Local revisits start fresh; production can reuse unchanged inputs.
+ * Service failures pause automatic scanning across posts until the user retries.
  */
 export type ScanAccess = "signed-out" | "preview" | "signed-in";
 
@@ -26,6 +26,7 @@ const DEMO: ScanResult = {
   model: "demo",
   checkedAt: new Date(0).toISOString(),
   relevance: 78,
+  reason: "You both describe an interest in local-first tools.",
   tentative: false,
   confidence: 0.88,
   signals: { sharedInterest: 0.84, relatedWork: 0.92 },
@@ -130,10 +131,11 @@ function Result({ result, demo, onSignIn }: { result: ScanResult; demo: boolean;
     <p className="scan-lede">{result.reason}</p>
   </>;
   return <>
+    <h2 className="scan-reason">{result.reason}</h2>
     <div className="scan-result">
       <div className="scan-overall">
         <motion.div className="scan-rating" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={spring}>
-          <h2 className="scan-score" aria-label={`${result.relevance} out of 100. Relevance to you.`}>{result.relevance}<span aria-hidden="true">/100</span></h2>
+          <p className="scan-score" aria-label={`${result.relevance} out of 100. Relevance to you.`}>{result.relevance}<span aria-hidden="true">/100</span></p>
           <div className="scan-rating-copy"><span className="scan-kicker">Bio scan</span><p>Relevance<span className="scan-long-label"> to you</span></p>{result.tentative && <span className="scan-tentative">Tentative</span>}</div>
         </motion.div>
       </div>
@@ -163,7 +165,8 @@ function SourcePair({ source }: { source: Extract<ScanResult, { status: "ok" }>[
       <b>Your bio</b>
       {source.username && <a href={`https://x.com/${encodeURIComponent(source.username)}`} target="_blank" rel="noopener noreferrer">@{source.username} <span aria-hidden="true">↗</span></a>}
     </div>
-    <p className="scan-bio">{source.bio}</p>
+    <p className="scan-bio">{source.bio || "No X bio supplied."}</p>
+    {source.context && <><b>Your optional context</b><p className="scan-bio">{source.context}</p></>}
     <div className="scan-source-head">
       <a href={postUrl(source.postId)} target="_blank" rel="noopener noreferrer">Their connect post <span aria-hidden="true">↗</span></a>
     </div>

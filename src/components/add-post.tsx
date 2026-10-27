@@ -11,6 +11,7 @@ export function AddPost({ curator, preview, busy, tagNames, onAdd }: { curator: 
   const [url, setUrl] = useState("");
   const [shared, setShared] = useState(false);
   const [tags, setTags] = useState<string[]>([]);
+  const [extraTags, setExtraTags] = useState("");
   const [author, setAuthor] = useState("");
   const [checked, setChecked] = useState(false);
   const [error, setError] = useState("");
@@ -20,9 +21,11 @@ export function AddPost({ curator, preview, busy, tagNames, onAdd }: { curator: 
     if (shared && author && !profileFromInput(author)) { setError("Author: use @handle or an https://x.com/handle link."); return; }
     if (shared && preview && !author) { setError("Add the author’s X profile before publishing."); return; }
     if (shared && author && !checked) { setError("Confirm you checked the author on X."); return; }
-    const failure = await onAdd(url, shared, tags, shared ? author.trim() : "");
+    const picked = [...new Set([...tags, ...extraTags.split(/[ ,]+/).map((tag) => tag.replace(/^#/, "").toLowerCase()).filter(Boolean)])];
+    if (shared && (picked.length > 8 || picked.some((tag) => !/^[a-z0-9_]{1,40}$/.test(tag)))) { setError("Use up to 8 hashtags, with letters, numbers or underscores."); return; }
+    const failure = await onAdd(url, shared, picked, shared ? author.trim() : "");
     setError(failure ?? "");
-    if (!failure) { setUrl(""); setTags([]); setAuthor(""); setChecked(false); }
+    if (!failure) { setUrl(""); setTags([]); setExtraTags(""); setAuthor(""); setChecked(false); }
   }}>
     <label htmlFor="add-url">Found someone on X?</label>
     <div className="add-row">
@@ -42,8 +45,9 @@ export function AddPost({ curator, preview, busy, tagNames, onAdd }: { curator: 
         onChange={(e) => { setAuthor(e.target.value); setChecked(false); setError(""); }} />
       <label className="check"><input type="checkbox" checked={checked} disabled={!author.trim()} onChange={(e) => setChecked(e.target.checked)} />I opened this profile on X and it’s the post’s author</label>
     </div>}
-    {curator && shared && preview && <fieldset className="tag-pick"><legend>Hashtags it uses</legend>
-      {tagNames.map((t) => <label key={t}><input type="checkbox" checked={tags.includes(t)} onChange={(e) => setTags(e.target.checked ? [...tags, t] : tags.filter((x) => x !== t))} />#{t}</label>)}
+    {curator && shared && <fieldset className="tag-pick"><legend>Hashtags it uses</legend>
+      {[...new Set(["connect", "building", "tech", ...tagNames])].map((t) => <label key={t}><input type="checkbox" checked={tags.includes(t)} onChange={(e) => setTags(e.target.checked ? [...tags, t] : tags.filter((x) => x !== t))} />#{t}</label>)}
+      <label>Other hashtags <input placeholder="design, music, photography" maxLength={328} value={extraTags} onChange={(e) => setExtraTags(e.target.value)} /></label>
     </fieldset>}
     <p id="add-help" className={error ? "error" : "fine"} role={error ? "alert" : undefined}>
       {error || (shared ? "Everyone with access sees it on the board." : "Only you will see it.")}

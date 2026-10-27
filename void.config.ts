@@ -12,14 +12,14 @@ export default defineConfig({
     observability: { enabled: true, traces: { enabled: true } },
   },
   head: {
-    title: "hashtagconnect · Shared #connect invitations",
+    title: "hashtagconnect · Grow your circle on X",
     htmlAttrs: { lang: "en" },
     meta: [
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       {
         name: "description",
         content:
-          "A shared, curated pool of public #connect invitations on X. Save the ones you want and open them on X.",
+          "Grow your circle on X. Discover people who want to connect, with interests that fit yours.",
       },
       { name: "theme-color", content: "#f4f3ef" },
     ],

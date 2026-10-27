@@ -1,3 +1,4 @@
+import type { ScanResult } from "../src/scan-contract";
 import { index, integer, primaryKey, sqliteTable, text } from "void/schema-d1";
 
 export const people = sqliteTable("people", {
@@ -13,6 +14,7 @@ export const posts = sqliteTable("posts", {
   url: text("url").notNull(),
   addedAt: integer("added_at").notNull(),
   pooledAt: integer("pooled_at"),
+  tags: text("tags", { mode: "json" }).$type<string[]>().notNull().default([]),
   personId: text("person_id").references(() => people.id, { onDelete: "set null" }),
 }, (table) => [index("posts_pool").on(table.pooledAt)]);
 
@@ -37,3 +39,41 @@ export const scanUsage = sqliteTable("scan_usage", {
   day: text("day").primaryKey(),
   attempts: integer("attempts").notNull(),
 });
+
+/** Optional context is separate from the provider-owned OAuth bio. */
+export const viewerContext = sqliteTable("viewer_context", {
+  userId: text("user_id").primaryKey(),
+  sentence: text("sentence").notNull(),
+});
+
+/** One reviewable submission per signed-in account; submissions never publish themselves. */
+export const submissions = sqliteTable("submissions", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull().unique(),
+  profileUrl: text("profile_url").notNull(),
+  postUrl: text("post_url").notNull(),
+  description: text("description").notNull(),
+  status: text("status", { enum: ["pending", "published", "declined"] }).notNull().default("pending"),
+  version: text("version").notNull(),
+  updatedAt: integer("updated_at").notNull(),
+}, (table) => [index("submissions_review").on(table.status, table.updatedAt)]);
+
+/** First-party milestones, not a log of profiles viewed or confirmed connections. */
+export const funnel = sqliteTable("funnel", {
+  userId: text("user_id").primaryKey(),
+  firstKeepAt: integer("first_keep_at"),
+  firstOpenAt: integer("first_open_at"),
+  firstVisitDay: text("first_visit_day"),
+  lastVisitDay: text("last_visit_day"),
+  activeDays: integer("active_days").notNull().default(0),
+  feedback: integer("feedback", { mode: "boolean" }),
+});
+
+/** At most one result per viewer/post; the hash includes every inference input and rubric version. */
+export const scanCache = sqliteTable("scan_cache", {
+  userId: text("user_id").notNull(),
+  postId: text("post_id").notNull().references(() => posts.id, { onDelete: "cascade" }),
+  inputHash: text("input_hash").notNull(),
+  result: text("result", { mode: "json" }).$type<ScanResult>().notNull(),
+  expiresAt: integer("expires_at").notNull(),
+}, (table) => [primaryKey({ columns: [table.userId, table.postId] })]);

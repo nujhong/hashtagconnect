@@ -3,7 +3,7 @@ export type ScanAvailability = { status: "ready"; dailyLimit: number | null } | 
 
 /** OAuth supplies the viewer's bio; official oEmbed markup supplies the post. The rendered iframe is never read. */
 export type ScanEvidence = {
-  viewer: { bio: string; username: string };
+  viewer: { bio: string; username: string; context?: string };
   post: { id: string; html: string };
 };
 
@@ -14,11 +14,13 @@ export type ScanResult =
       checkedAt: string;
       /** Jev's position on the text-relevance rubric, normalized to 0–100; never a probability. */
       relevance: number;
+      /** Plain-language summary of the strongest supported rubric level, not generated biography. */
+      reason: string;
       tentative: boolean;
       confidence: number;
       signals: { sharedInterest: number; relatedWork: number };
       evidence: { bioDetail: number; postDetail: number };
-      source: { bio: string; username: string; postId: string };
+      source: { bio: string; username: string; postId: string; context?: string };
       unknowns: string[];
     }
   | { status: "needs_bio"; reason: string }

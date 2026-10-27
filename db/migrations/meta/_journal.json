@@ -5,43 +5,8 @@
     {
       "idx": 0,
       "version": "6",
-      "when": 1792908267514,
-      "tag": "20261025060427_huge_cammi",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "6",
-      "when": 1792909205793,
-      "tag": "20261025062005_tiresome_korg",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "6",
-      "when": 1792931759897,
-      "tag": "20261025123559_right_screwball",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "6",
-      "when": 1792945152438,
-      "tag": "20261025161912_natural_wilson_fisk",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "6",
-      "when": 1792987572334,
-      "tag": "20261026040612_broken_grim_reaper",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "6",
-      "when": 1792993707530,
-      "tag": "20261026054827_tricky_riptide",
+      "when": 1793068357216,
+      "tag": "20261027023237_initial",
       "breakpoints": true
     }
   ]

@@ -79,7 +79,7 @@ export async function resolveTarget(userId: string, target: StateTarget) {
   return person;
 }
 
-export async function importPost(userId: string, url: string, shared: boolean, author?: { profileUrl: string; confirmed: boolean }) {
+export async function importPost(userId: string, url: string, shared: boolean, author?: { profileUrl: string; confirmed: boolean }, tags?: string[]) {
   const post = postFromUrl(url);
   if (!post) throw new HTTPException(400, { message: "Paste an HTTPS post URL from x.com or twitter.com." });
   const { id, addedAt } = post;
@@ -102,10 +102,10 @@ export async function importPost(userId: string, url: string, shared: boolean, a
     }
     if (!personId) throw new HTTPException(400, { message: "Add and confirm the author's X profile link before publishing." });
     await db.batch([
-      db.insert(posts).values({ id, url: post.url, addedAt, pooledAt: addedAt, personId })
+      db.insert(posts).values({ id, url: post.url, addedAt, pooledAt: addedAt, personId, tags: tags ?? [] })
         .onConflictDoUpdate({ target: posts.id, set: {
           // Re-adding a URL must not make an existing pool entry look new.
-          pooledAt: sql`coalesce(${posts.pooledAt}, ${addedAt})`, personId,
+          pooledAt: sql`coalesce(${posts.pooledAt}, ${addedAt})`, personId, ...(tags ? { tags } : {}),
         } }),
       // Linking a legacy post promotes its choices, preserving the most recent decision.
       db.insert(personStates).select(db.select({

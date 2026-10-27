@@ -10,4 +10,6 @@ export default defineEnv({
   CF_WORKERS_AI_TOKEN: string().optional(),
   // Optional shared daily request cap; omit for unlimited attempts, or set 0 to pause scans.
   SCAN_DAILY_LIMIT: number().optional(),
+  // Production requires an explicit positive cache lifetime (seconds); local scans stay fresh.
+  SCAN_CACHE_TTL_SECONDS: number().optional(),
 });

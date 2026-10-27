@@ -56,14 +56,14 @@ export function Stash({ dialogRef, open, onClose, browserOnly, lists, list, onLi
       {passed
         ? <button className="back" onClick={() => onList("people")}>← Stash</button>
         : <h2><StashIcon />Stash</h2>}
-      <p>{passed ? "People you passed. Bring anyone back to your queue." : "People you kept, with curator-confirmed profiles."}
+      <p>{passed ? "People you passed. Bring anyone back to your queue." : "People you kept. Open a profile to follow or say hello on X."}
         {browserOnly ? " Stored in this browser." : " Only you see this."}</p>
       <button className="shelf-close" onClick={onClose} aria-label="Close Stash">×</button>
     </div>
 
     {!passed && unopenedCount > 0 && <div className="shelf-open-all">
       <button className="big keep" disabled={row.busy} onClick={onOpenAll}><span>Open {unopenedCount} {unopenedCount === 1 ? "tab" : "tabs"}</span><i aria-hidden="true">↗</i></button>
-      <p>All unopened profiles and saved post links. Your browser may ask you to allow pop-ups.</p>
+      <p>Opens profiles and saved post links; following happens on X. Allow pop-ups if your browser asks.</p>
     </div>}
 
     {/* People first; View post returns to the original invitation without a duplicate embed in Stash. */}

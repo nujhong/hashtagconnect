@@ -17,13 +17,13 @@ export function DiscoveryFilters({ tags, selected, preview, onChange }: {
       <nav className="tagbar" aria-label="Filter by hashtag">
         {tags.map(({ name, count }) => {
           const on = selected.includes(name);
-          return <button key={name} className={`sticker${on ? " on" : ""}`} aria-pressed={on} disabled={!preview}
+          return <button key={name} className={`sticker${on ? " on" : ""}`} aria-pressed={on}
             onClick={() => onChange(on ? selected.filter((tag) => tag !== name) : [...selected, name])}>
-            #{name}{preview && <small>{count}</small>}
+            #{name}<small>{count}</small>
           </button>;
         })}
       </nav>
-      <p className="tagbar-note">{preview ? "Curator tags · preview" : "Filters will be available when the curator adds tags."}</p>
+      <p className="tagbar-note">{preview ? "Curator tags · preview" : tags.length ? "Hashtags checked by the curator" : "No curator tags yet."}</p>
     </div>
   </div>;
 }
