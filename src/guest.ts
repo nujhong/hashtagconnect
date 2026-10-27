@@ -15,7 +15,10 @@ const isPerson = (v: unknown): v is Person =>
   Boolean(profileFromInput((v as Person).profileUrl));
 
 /** Restore existing guest posts, choices and tags without injecting samples or maintaining seed history. */
-export function restoreGuest(storage: Pick<Storage, "getItem"> = localStorage): {
+export function restoreGuest(
+  storage: Pick<Storage, "getItem"> = localStorage,
+  pool: Post[] = [],
+): {
   posts: Post[];
   tags: Tags;
 } {
@@ -45,5 +48,23 @@ export function restoreGuest(storage: Pick<Storage, "getItem"> = localStorage): 
       })
     : [];
   const tags = typeof stored?.tags === "object" && stored.tags ? (stored.tags as Tags) : {};
-  return { posts, tags };
+  const saved = new Map(posts.map((post) => [post.id, post]));
+  const pooledIds = new Set(pool.map((post) => post.id));
+  return {
+    posts: [
+      ...pool.map((post) => {
+        const previous = saved.get(post.id);
+        return {
+          ...post,
+          person: post.person ?? previous?.person ?? null,
+          choice: previous?.choice ?? null,
+          openedAt: previous?.openedAt ?? null,
+        };
+      }),
+      ...posts
+        .filter((post) => !pooledIds.has(post.id) && (post.choice || post.openedAt))
+        .map((post) => ({ ...post, pooledAt: null })),
+    ],
+    tags: { ...tags, ...Object.fromEntries(pool.map((post) => [post.id, post.tags ?? []])) },
+  };
 }

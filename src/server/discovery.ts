@@ -12,7 +12,28 @@ export const stateTarget = z.union([
 ]);
 export type StateTarget = { postId: string } | { personId: string };
 
-export async function listPosts(userId: string): Promise<Discovery> {
+export async function listPosts(userId?: string): Promise<Discovery> {
+  if (!userId) {
+    const rows = await db
+      .select({
+        post: posts,
+        person: personFields,
+        onPlatform: platformMembership(sql`${people.handle}`),
+      })
+      .from(posts)
+      .leftJoin(people, eq(posts.personId, people.id))
+      .where(isNotNull(posts.pooledAt))
+      .orderBy(desc(posts.pooledAt), desc(posts.addedAt));
+    return {
+      posts: rows.map(({ post, person, onPlatform }) => ({
+        ...post,
+        person: person ? { ...person, onPlatform } : null,
+        choice: null,
+        openedAt: null,
+      })),
+      people: [],
+    };
+  }
   const rows = await db
     .select({
       post: posts,

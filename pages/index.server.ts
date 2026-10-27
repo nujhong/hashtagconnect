@@ -27,7 +27,7 @@ export const loader = defineHandler(async () => {
     project: context?.project ?? null,
     feedback: activity?.feedback ?? null,
     hasOpened: Boolean(activity?.firstOpenAt),
-    ...(user ? await listPosts(user.id) : { posts: [], people: [] }),
+    ...(await listPosts(user?.id)),
     user: user
       ? {
           name: user.name,

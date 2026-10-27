@@ -54,7 +54,7 @@ export default function HomePage(props: Props) {
 function App(props: Props) {
   const reduced = useReducedMotion();
   const guest = !props.user;
-  const [posts, setPosts] = useState<Post[]>(guest ? [] : props.posts);
+  const [posts, setPosts] = useState<Post[]>(props.posts);
   const [people, setPeople] = useState<PersonEntry[]>(guest ? [] : props.people);
   const [tags, setTags] = useState<Tags>(
     Object.fromEntries(props.posts.map((post) => [post.id, post.tags ?? []])),
@@ -137,7 +137,7 @@ function App(props: Props) {
 
   useEffect(() => {
     if (guest) {
-      const restored = restoreGuest();
+      const restored = restoreGuest(localStorage, props.posts);
       setPosts(restored.posts);
       setTags(restored.tags);
     }
@@ -438,7 +438,7 @@ function App(props: Props) {
       ?.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
   }
 
-  // The guest state lives in browser storage, so the server render has nothing to show yet.
+  // Restore browser choices before presenting the guest deck.
   const loaded = !guest || ready;
   const status =
     current?.choice === "save"
