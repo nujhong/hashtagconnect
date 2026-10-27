@@ -3,9 +3,9 @@ import { browserRunUsage } from "../../db/schema.ts";
 
 type Database = DrizzleD1Database<typeof import("../../db/schema.ts")>;
 
-// US$10/month at $0.09/hour: reserve one minute per call, ignoring shared free hours.
+// 5,000 one-minute calls at $0.09/hour budget $7.50 against the US$10 target, ignoring free hours.
 // Screenshot stage timeouts total 42s; project reads total 20s. Revisit if either grows.
-export const BROWSER_RUN_MONTHLY_LIMIT = Math.floor((10 * 60) / 0.09);
+export const BROWSER_RUN_MONTHLY_LIMIT = 5_000;
 
 export class BrowserRunBudgetError extends Error {
   constructor() {
