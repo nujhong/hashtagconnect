@@ -24,7 +24,6 @@ import {
   type AuthStep,
 } from "~/src/components/auth";
 import { ConnectionFeedback } from "~/src/components/community";
-import { DiscoveryFilters } from "~/src/components/discovery-filters";
 import { Decisions } from "~/src/components/decisions";
 import { Cords, EvidenceCards } from "~/src/components/evidence";
 import { Invitation } from "~/src/components/invitation";
@@ -60,7 +59,6 @@ function App(props: Props) {
   const [tags, setTags] = useState<Tags>(
     Object.fromEntries(props.posts.map((post) => [post.id, post.tags ?? []])),
   );
-  const [filter, setFilter] = useState<string[]>([]);
   const [ready, setReady] = useState(false);
   const [pending, setPending] = useState(false);
   const [notice, setNotice] = useState<Notice | null>(null);
@@ -96,10 +94,9 @@ function App(props: Props) {
   const [, tick] = useState(0);
 
   const pool = posts.filter((p) => p.pooledAt !== null);
-  const inFilter = (p: Post) => !filter.length || tags[p.id]?.some((t) => filter.includes(t));
   const unseen = pool.filter((p) => p.choice === null && !p.openedAt);
   // One card per person: a person with several invitations appears once.
-  const deck = dedupePeople(unseen.filter(inFilter), PINNED_POST_ID);
+  const deck = dedupePeople(unseen, PINNED_POST_ID);
   const focused = focusId ? (posts.find((p) => p.id === focusId) ?? null) : null;
   const current = focused ?? deck[0];
   // The server keeps person records; the browser guest state derives them from its posts.
@@ -131,7 +128,6 @@ function App(props: Props) {
   ];
   const lists: Record<StashList, StashEntry[]> = { people: stash("save"), aside: stash("skip") };
   const unopened = unopenedTargets(lists.people);
-  const tagNames = [...new Set(Object.values(tags).flat())];
   const account: Account | null = props.user
     ? { ...props.user, image: props.user.image ?? null }
     : null;
@@ -216,7 +212,7 @@ function App(props: Props) {
   /**
    * Desktop shortcuts: ← Pass, → Keep, S Stash, all switchable off in Settings.
    * Native dialogs handle their own Escape. Nothing fires while typing, with a modifier held, inside
-   * a dialog or filter popover, on widgets that own arrow keys, or while focus is in X's iframe (its keys never reach us).
+   * a dialog or popover, on widgets that own arrow keys, or while focus is in X's iframe (its keys never reach us).
    */
   const onKey = useRef<(e: KeyboardEvent) => void>(() => {});
   onKey.current = (e) => {
@@ -516,9 +512,9 @@ function App(props: Props) {
         <div className="workspace" ref={workspace}>
           {scanPanel}
           <div className="work">
-            {/* The queue: the first unsorted pool post that matches the tags (one per person), or one brought back from Stash.
+            {/* The queue: the first unsorted pool post (one per person), or one brought back from Stash.
               X's official widget renders it whole and keeps still; only the scan's pointer-transparent outlines sit over it,
-              and it only changes when you decide, filter or pick another post. */}
+              and it only changes when you decide or pick another post. */}
             <section id="post" className="post-col" tabIndex={-1} aria-label="The original post">
               {(focused || status) && (
                 <header className="post-head">
@@ -567,32 +563,18 @@ function App(props: Props) {
                   >
                     {/* The post block holds the human message; the queue block keeps counting (0 people to connect). */}
                     <span className="empty-sticker" aria-hidden="true">
-                      {filter.length ? "#" : "✓"}
+                      ✓
                     </span>
-                    <h2>
-                      {filter.length
-                        ? "No one under these tags."
-                        : pool.length
-                          ? "All caught up."
-                          : "No one here yet."}
-                    </h2>
+                    <h2>{pool.length ? "All caught up." : "No one here yet."}</h2>
                     <p>
-                      {filter.length
-                        ? "Try a different hashtag, or drop one to see more people."
-                        : pool.length
-                          ? "You’ve reviewed everyone in this pool. Clear your history in Settings to start again."
-                          : "There are no people in the pool yet."}
+                      {pool.length
+                        ? "You’ve reviewed everyone in this pool. Clear your history in Settings to start again."
+                        : "There are no people in the pool yet."}
                     </p>
-                    {filter.length > 0 ? (
-                      <button className="btn" onClick={() => setFilter([])}>
-                        Clear tags
+                    {lists.people.length > 0 && (
+                      <button className="btn primary" onClick={() => setShelf(true)}>
+                        Open your Stash
                       </button>
-                    ) : (
-                      lists.people.length > 0 && (
-                        <button className="btn primary" onClick={() => setShelf(true)}>
-                          Open your Stash
-                        </button>
-                      )
                     )}
                   </motion.div>
                 )}
@@ -605,10 +587,10 @@ function App(props: Props) {
             </section>
 
             <aside className="panel" aria-label="Your choice">
-              {/* Two attached blocks: the queue (evidence, discovery and count) docks onto the decisions. Phones stack the
+              {/* Two attached blocks: the queue (evidence and count) docks onto the decisions. Phones stack the
                 queue above the scan and post, and pin the decisions to the bottom. */}
               <div className="queue-block">
-                {/* Evidence first: it continues the header's score and signals straight above it, before the queue controls. */}
+                {/* Evidence first: it continues the header's score and signals straight above it, before the count. */}
                 <EvidenceCards
                   evidence={postLayer?.evidence ?? []}
                   spots={corded && postLayer ? postLayer.spots : null}
@@ -616,42 +598,29 @@ function App(props: Props) {
                   scored={postLayer?.scored ?? false}
                   onProfile={() => setModal("privacy")}
                 />
-                <div className="panel-top">
-                  <DiscoveryFilters
-                    tags={tagNames.map((name) => ({
-                      name,
-                      count: unseen.filter((post) => tags[post.id]?.includes(name)).length,
-                    }))}
-                    selected={filter}
-                    onChange={(next) => {
-                      setFilter(next);
-                      setFocusId(null);
-                    }}
-                  />
-                  <div className="panel-head">
-                    <h1>
-                      {!loaded ? (
-                        " "
-                      ) : focused ? (
-                        <>Another look.</>
-                      ) : (
-                        <>
-                          <span className="queue-count">
-                            <Count value={deck.length} />
-                          </span>{" "}
-                          {deck.length === 1 ? "person" : "people"}{" "}
-                          <span className="br">to connect</span>
-                        </>
-                      )}
-                    </h1>
-                    {(focused || deck.length > 0) && (
-                      <p className="panel-sub">
-                        {focused
-                          ? "Change your mind any time."
-                          : "Keep someone in your Stash. Make the first move on X."}
-                      </p>
+                <div className="panel-head">
+                  <h1>
+                    {!loaded ? (
+                      " "
+                    ) : focused ? (
+                      <>Another look.</>
+                    ) : (
+                      <>
+                        <span className="queue-count">
+                          <Count value={deck.length} />
+                        </span>{" "}
+                        {deck.length === 1 ? "person" : "people"}{" "}
+                        <span className="br">to connect</span>
+                      </>
                     )}
-                  </div>
+                  </h1>
+                  {(focused || deck.length > 0) && (
+                    <p className="panel-sub">
+                      {focused
+                        ? "Change your mind any time."
+                        : "Keep someone in your Stash. Make the first move on X."}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -668,7 +637,7 @@ function App(props: Props) {
 
                 <p className="panel-foot">
                   {current?.openedAt ? <>Opened on X {timeAgo(current.openedAt)}. </> : null}
-                  {/* The one visible count on desktop; phones show it in the tower's top row instead. */}
+                  {/* Desktop's count beside evidence; without evidence the heading shows it, and phones use the tower's top row. */}
                   {!focused && loaded ? (
                     <span className="foot-count">
                       {deck.length} {deck.length === 1 ? "person" : "people"} to connect.{" "}

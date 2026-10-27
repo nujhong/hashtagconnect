@@ -309,65 +309,8 @@ code {
   margin: 0 auto;
   padding: 20px 20px 48px;
 }
-.layout.is-loading .tagbar,
 .layout.is-loading .panel-head {
   visibility: hidden;
-}
-
-/* Hashtag filters live in the right controls; phones open the same choices with a native popover. */
-.discovery-label {
-  margin-bottom: 10px;
-  color: var(--muted);
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-}
-.tagbar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-}
-.sticker {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 38px;
-  padding: 7px 12px;
-  border: 1px solid var(--faint);
-  border-radius: 9px;
-  background: transparent;
-  font: 600 14px/1.2 var(--display);
-  transition:
-    transform 0.12s,
-    background 0.15s;
-}
-.sticker:hover:not(:disabled) {
-  background: var(--surface);
-}
-.sticker.on {
-  background: var(--keep);
-  color: var(--keep-ink);
-  border-color: var(--keep);
-}
-.sticker:active:not(:disabled) {
-  transform: translateY(2px);
-}
-.sticker small {
-  font: 600 11px var(--sans);
-}
-.sticker:disabled {
-  opacity: 0.55;
-}
-.tagbar-note {
-  margin-top: 10px;
-  color: var(--muted);
-  font-size: 12px;
-  max-width: 32ch;
-}
-.filter-toggle {
-  display: none;
 }
 
 /* Workspace: attached blocks. The scan docks across the top; the post and the queue tuck under it side by side, and the
@@ -652,8 +595,7 @@ code {
   }
 }
 
-/* The controls column: the queue block (discovery, count, evidence) docks onto the decisions block. Its height follows
-   the post; the count fills the space between discovery and evidence. */
+/* The controls column: the queue block (count, evidence) docks onto the decisions block. Its height follows the post. */
 .panel {
   grid-column: 2;
   display: flex;
@@ -679,9 +621,6 @@ code {
   margin-top: calc(-1 * var(--tuck));
   padding: calc(var(--tuck) + 20px) 30px 22px;
   background: var(--panel);
-}
-.panel-top {
-  display: contents;
 }
 .panel-head {
   display: flex;
@@ -1939,12 +1878,6 @@ code {
     padding: 0;
     box-shadow: 0 4px 0 var(--edge);
   }
-  .panel-top {
-    display: flex;
-    flex-direction: row-reverse;
-    align-items: center;
-    justify-content: space-between;
-  }
   .panel-head {
     padding: 16px 0 16px 16px;
     gap: 0;
@@ -1967,47 +1900,6 @@ code {
   }
   .panel-sub {
     display: none;
-  }
-  .discovery-filters {
-    padding: 0 12px 0 10px;
-  }
-  .discovery-label {
-    display: none;
-  }
-  .filter-toggle {
-    display: grid;
-    place-items: center;
-    width: 40px;
-    height: 40px;
-    border: 1px solid var(--faint);
-    border-radius: 11px;
-    background: var(--surface);
-    anchor-name: --discovery-filter;
-  }
-  .filter-toggle svg {
-    width: 20px;
-    height: 20px;
-    fill: var(--ink);
-    stroke: var(--ink);
-    stroke-width: 1.8;
-  }
-  .filter-options[popover] {
-    position: fixed;
-    inset: 112px 24px auto auto;
-    position-anchor: --discovery-filter;
-    top: anchor(bottom);
-    right: anchor(right);
-    margin: 8px 0 0;
-    width: min(290px, calc(100vw - 64px));
-    padding: 16px;
-    border: 1px solid var(--faint);
-    border-radius: 14px;
-    background: var(--surface);
-    color: var(--ink);
-    box-shadow: 0 14px 35px #0008;
-  }
-  .filter-options .sticker {
-    min-height: 42px;
   }
   .post-analysis {
     order: 2;
@@ -2787,14 +2679,14 @@ label.set-row {
   }
 }
 
-/* Desktop: the queue block is evidence, then the hashtag chips; the people count appears once, in the line under
-   Pass/Keep. The heading stays as the page's h1 for assistive tech. Phones keep their count-and-filter tower row. */
+/* Desktop: the people count appears once. With evidence, the queue block is the evidence and the count moves to the
+   line under Pass/Keep, the heading staying as the page's h1 for assistive tech; without it (guests, before a scan) the
+   heading fills the block. Phones keep their count in the tower's top row. */
 @media (min-width: 1000px) {
-  .discovery-label,
-  .tagbar-note {
+  .panel:not(:has(.evidence)) .foot-count {
     display: none;
-  } /* the chips speak for themselves; no chips, no section */
-  .panel-head {
+  }
+  .queue-block:has(.evidence) .panel-head {
     position: absolute;
     width: 1px;
     height: 1px;
