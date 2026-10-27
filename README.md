@@ -2,7 +2,7 @@
 
 Compact brand: **#connect**. (Package, worker and storage identifiers still say `xconnect`; they are deliberately unchanged.)
 
-Grow your circle on X with people whose interests fit yours. Discovery is designed around a service-collected shared pool of public #connect posts. The prototype uses its existing seeded pool and accepts URL ingestion. Automatic collection is not connected yet. Posts appear as genuine official X embeds. You privately keep or pass the people behind them, then visit their profiles from Stash. Void + React on Cloudflare Workers + D1, animated with Motion.
+Grow your circle on X with people whose interests fit yours. Discovery is designed around a service-collected shared pool of public #connect posts. The prototype uses its existing seeded pool. Automatic collection is not connected yet. Posts appear as genuine official X embeds. You privately keep or pass the people behind them, then visit their profiles from Stash. Void + React on Cloudflare Workers + D1, animated with Motion.
 
 Design intent, colour and type roles, the embed boundary, motion and copy style are in [DESIGN.md](DESIGN.md). Code layout: `pages/index.tsx` holds page state and actions and composes the UI sections in `src/components/`. Pure helpers are in `src/people.ts` and `src/sandbox.ts`, the X widget loader is `src/x-embed.tsx`, and server code is in `src/server/` and `routes/api/`.
 
@@ -79,7 +79,6 @@ For isolated browser comparisons, see [the standalone fixtures](fixtures/embeds/
 | Route | Purpose |
 | --- | --- |
 | GET /api/discover | Shared pool plus the viewer's private post and person records |
-| POST /api/ingest | Trusted service token: add URLs to the shared pool |
 | POST /api/import | Save a URL privately; only the URL is accepted |
 | POST /api/decisions | Set save, skip or clear a choice by postId or personId |
 | DELETE /api/decisions | Clear the viewer's choices and opened history |
@@ -88,22 +87,9 @@ For isolated browser comparisons, see [the standalone fixtures](fixtures/embeds/
 | POST /api/context | Save or clear the viewer’s optional scan context |
 | POST /api/activity | Record an active UTC day or optional usefulness feedback |
 
-## Shared-pool ingestion
+## Shared-pool data
 
-Any trusted script, agent or collector can call `POST /api/ingest` with `Authorization: Bearer <INGESTION_TOKEN>` and JSON `{ "urls": ["https://x.com/handle/status/1234"] }`. This secret is separate from X OAuth and X API credentials. An ordinary signed-in member cannot publish to the pool. Leave `INGESTION_TOKEN` unset to disable the endpoint; store it as a server secret when deploying.
-
-The endpoint accepts 1–100 HTTPS X/Twitter post URLs in a body up to 64 KiB. It validates the whole request before writing, deduplicates by post ID and atomically inserts/promotes rows into the shared D1 pool. Repeated calls are safe: original dates, existing author links, tags and private choices are preserved. The response is `{ "accepted": 1, "ids": ["1234"] }`; accepted counts distinct supplied IDs, including existing posts. No X API call, embed fetch or model call happens during ingestion. Newly ingested URLs have no author or tags until metadata is supplied through a future enrichment path; the app already supports unlinked posts.
-
-Manual callers can use an environment variable without putting the token in a URL:
-
-```sh
-curl --fail-with-body "$APP_URL/api/ingest" \
-  -H "Authorization: Bearer $INGESTION_TOKEN" \
-  -H 'Content-Type: application/json' \
-  --data '{"urls":["https://x.com/handle/status/1234"]}'
-```
-
-Native Cloudflare Worker RPC is authorized through a service binding. An external script with a bearer token uses HTTP. If a collector moves into another Worker, it can use the same ingestion operation through a private binding; no second RPC transport or collector Worker is needed yet.
+Trusted operators and collectors write directly to D1 using its native binding, Wrangler or Cloudflare's D1 API. The app reads the shared pool independently of how posts were collected. There is no ingestion endpoint, ingestion token or custom import script. Writers normalize post URLs, deduplicate by post ID and preserve existing author links, tags and viewer state when upserting.
 
 ## Proposed, for discussion (not built)
 
