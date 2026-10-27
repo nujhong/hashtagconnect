@@ -64,7 +64,8 @@ test("confirmed project context supplements an empty bio, changes the scan hash,
   const result = await evaluateProfiles(config, evidence, async () => {
     called = true;
     return Response.json({ success: true, result: { state: "Completed", result: { model: "typesafe/jev", answers: {
-      relevance: { type: "score", score: 3, confidence: 0.9, probabilities: { "0": 0, "1": 0, "2": 0, "3": 1 } },
+      explanation: { type: "choice", choice: "interest", confidence: 0.9, probabilities: { interest: 0.9, work: 0.1, little: 0 } },
+    relevance: { type: "score", score: 3, confidence: 0.9, probabilities: { "0": 0, "1": 0, "2": 0, "3": 1 } },
       ...Object.fromEntries(["bio_has_detail", "post_has_detail", "shared_interest", "related_work"].map((key) => [key, { type: "noul", noul: 0.9 }])),
     } } } });
   });

@@ -16,12 +16,11 @@ export type ScanResult =
       checkedAt: string;
       /** Jev's position on the text-relevance rubric, normalized to 0–100; never a probability. */
       relevance: number;
-      /** Plain-language summary of the strongest supported rubric level, with an optional short, source-checked explanation. */
+      /** Short explanation selected by Jev Choice in the same request as the scores. */
       reason: string;
       tentative: boolean;
       confidence: number;
       signals: { sharedInterest: number; relatedWork: number; projectFit?: number };
-      explanation?: { viewerSource: "bio" | "context" | "project"; viewerQuote: string; postQuote: string };
       evidence: { bioDetail: number; postDetail: number };
       source: { bio: string; username: string; postId: string; context?: string; project?: ProjectProfile };
       unknowns: string[];

@@ -11,11 +11,18 @@ const relevanceLevels = [
   "A specific subject, skill, field or activity stated in the viewer profile is clearly relevant to the invitation, though the invitation does not directly seek that particular interest or kind of participant.",
   "The invitation directly seeks a subject, activity or kind of participant explicitly described in the viewer profile. One specific, direct alignment is sufficient; multiple topics are not required.",
 ];
+const explanations = {
+  project: "Your project fits what they’re looking for.",
+  interest: "You share a specific interest.",
+  work: "Your work is in a related field.",
+  little: "There’s little overlap in the available context.",
+};
 const answerSchema = z.object({ model: z.string(), answers: z.object({
   relevance: z.object({
     type: z.literal("score"), score: z.number().min(0).max(relevanceLevels.length - 1), confidence: probability,
     probabilities: z.object({ "0": probability, "1": probability, "2": probability, "3": probability }),
   }),
+  explanation: z.object({ type: z.literal("choice"), choice: z.enum(["project", "interest", "work", "little"]), confidence: probability, probabilities: z.record(z.string(), probability) }),
   bio_has_detail: noul, post_has_detail: noul, shared_interest: noul, related_work: noul, project_fit: noul.optional(),
 }) });
 
@@ -39,6 +46,16 @@ export function jevInput(evidence: ScanEvidence) {
         type: "score",
         instructions: { question: "How directly does this invitation relate to the work, skills or non-sensitive interests actually stated in the viewer's profile? Rate the strength and specificity of the connection, not the number of topics mentioned.", evidence_rules: evidenceRules },
         criteria: relevanceLevels,
+      },
+      explanation: {
+        type: "choice",
+        instructions: { question: "Which short explanation best describes the strongest supported connection? Choose project for a direct project fit, otherwise interest for an explicit shared topic, work for a broader professional or creative connection, or little if no connection is supported.", evidence_rules: evidenceRules },
+        criteria: {
+          ...(evidence.viewer.project ? { project: "The saved project's subject, purpose or audience directly fits what the invitation seeks." } : {}),
+          interest: "Both texts explicitly share a specific interest, skill or topic.",
+          work: "The viewer's stated work or skills have a broader professional or creative connection, without a specific shared interest.",
+          little: "The supplied texts do not support a topical, professional or creative connection.",
+        },
       },
       bio_has_detail: check("Does the viewer profile state at least one usable role, skill, project subject or non-sensitive interest?",
         "At least one such detail is stated, including a short professional role.", "Only a greeting, slogan, handle, unexplained URL or other content without such detail is given."),
@@ -64,18 +81,11 @@ export function scanFromAnswers(raw: unknown, evidence: ScanEvidence, now = new 
   // Prototype thresholds separate missing evidence from an uncertain rating; they are not accuracy claims.
   if (bioDetail <= 0.3 || postDetail <= 0.3) return { status: "not_enough_data", missing: bioDetail <= 0.3 ? "viewer" : "post", reason: `${bioDetail <= 0.3 ? "Your profile" : "This invitation"} has too little detail about roles, projects or interests to compare.` };
   const tentative = answers.relevance.confidence < 0.6 || bioDetail < 0.7 || postDetail < 0.7;
-  const level = Object.entries(answers.relevance.probabilities).reduce((best, entry) => entry[1] > best[1] ? entry : best)[0];
-  const reasons: Record<string, string> = {
-    "0": "No clear connection to the interests you’ve shared.",
-    "1": "Related fields, but little specific overlap.",
-    "2": "An interest you’ve shared is relevant to this invitation.",
-    "3": "They’re looking for a kind of person or interest you describe.",
-  };
   return {
     status: "ok", model, checkedAt: now.toISOString(),
     relevance: Math.round(answers.relevance.score / (relevanceLevels.length - 1) * 100),
     tentative,
-    reason: tentative ? "A possible connection, with limited evidence." : reasons[level]!,
+    reason: explanations[answers.explanation.choice],
     confidence: answers.relevance.confidence,
     signals: { sharedInterest: answers.shared_interest.noul, relatedWork: answers.related_work.noul, ...(evidence.viewer.project && answers.project_fit ? { projectFit: answers.project_fit.noul } : {}) },
     evidence: { bioDetail, postDetail },

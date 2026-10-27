@@ -61,6 +61,7 @@ test("empty OAuth bio is distinct from a sign-in that never collected it", async
 
 function answers(score = 2.4, confidence = 0.8) {
   return { model: "jev-test", answers: {
+    explanation: { type: "choice", choice: "interest", confidence: 0.9, probabilities: { interest: 0.9, work: 0.1, little: 0 } },
     relevance: { type: "score", score, confidence, probabilities: { "0": 0, "1": 0, "2": 0.6, "3": 0.4 } },
     bio_has_detail: { type: "noul", noul: 0.98 }, post_has_detail: { type: "noul", noul: 0.97 },
     shared_interest: { type: "noul", noul: 0.8 }, related_work: { type: "noul", noul: 0.9 },
@@ -81,7 +82,7 @@ test("Jev receives only the OAuth bio and oEmbed markup through the native Cloud
     assert.deepEqual(body.input.state, { viewer_bio: evidence.viewer.bio, connect_post_html: evidence.post.html });
     assert.equal(body.input.questions.relevance.type, "score");
     assert.equal(body.input.questions.relevance.criteria.length, 4);
-    assert.deepEqual(Object.keys(body.input.questions), ["relevance", "bio_has_detail", "post_has_detail", "shared_interest", "related_work"]);
+    assert.deepEqual(Object.keys(body.input.questions), ["relevance", "explanation", "bio_has_detail", "post_has_detail", "shared_interest", "related_work"]);
     for (const key of ["bio_has_detail", "post_has_detail", "shared_interest", "related_work"]) assert.equal(body.input.questions[key].type, "noul");
     return Response.json({ success: true, result: { state: "Completed", result: answers() } });
   });

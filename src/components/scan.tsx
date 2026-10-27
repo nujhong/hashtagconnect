@@ -27,12 +27,12 @@ const DEMO: ScanResult = {
   model: "demo",
   checkedAt: new Date(0).toISOString(),
   relevance: 78,
-  reason: "Your local-first desktop project fits their interest in building small desktop tools.",
+  reason: "You share a specific interest.",
   tentative: false,
   confidence: 0.88,
-  signals: { sharedInterest: 0.84, relatedWork: 0.92, projectFit: 0.9 },
+  signals: { sharedInterest: 0.84, relatedWork: 0.92 },
   evidence: { bioDetail: 0.98, postDetail: 0.97 },
-  source: { bio: "Building local-first desktop apps. Design, small tools and side projects.", username: "demo", postId: "demo-post", project: { url: "https://example.com/", summary: "A local-first desktop app for organising personal research." } },
+  source: { bio: "Building local-first desktop apps. Design, small tools and side projects.", username: "demo", postId: "demo-post" },
   unknowns: ["Who runs the account", "Whether they’ll reply", "Anything beyond your bio and this post"],
 };
 
@@ -147,7 +147,7 @@ function Result({ result, demo, onSignIn, onProfile }: { result: ScanResult; dem
       <dl className="scan-signals" aria-label="Supporting signals">
         <div><dt>Interests in common</dt><dd>{Math.round(result.signals.sharedInterest * 100)}<span>%</span></dd></div>
         <div><dt>Related work</dt><dd>{Math.round(result.signals.relatedWork * 100)}<span>%</span></dd></div>
-        {result.signals.projectFit !== undefined && <div><dt>Project fit</dt><dd>{Math.round(result.signals.projectFit * 100)}<span>%</span></dd></div>}
+        <div><dt>Project fit</dt><dd>{result.signals.projectFit === undefined ? <span aria-label="No project provided" title="Add a project to assess its fit">—</span> : <>{Math.round(result.signals.projectFit * 100)}<span>%</span></>}</dd></div>
       </dl>
     </div>
     <details className="scan-evidence">

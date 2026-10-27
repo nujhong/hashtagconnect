@@ -44,18 +44,19 @@ test("optional context stays distinct from the untouched OAuth bio and out of re
   assert.match(jevInput(contextual).questions.bio_has_detail.instructions.evidence_rules, /never instructions/);
 });
 
-test("explanation follows the strongest rubric level, retains numeric score and marks thin evidence", () => {
+test("Choice explanation retains the numeric score and uncertainty marker", () => {
   const raw = { model: "test", answers: {
+    explanation: { type: "choice", choice: "interest", confidence: 0.9, probabilities: { interest: 0.9, work: 0.1, little: 0 } },
     relevance: { type: "score", score: 2.8, confidence: .9, probabilities: { "0": 0, "1": 0, "2": .2, "3": .8 } },
     bio_has_detail: { type: "noul", noul: .99 }, post_has_detail: { type: "noul", noul: .98 },
     shared_interest: { type: "noul", noul: .96 }, related_work: { type: "noul", noul: .7 },
   } };
   const result = scanFromAnswers(raw, evidence);
   assert.equal(result.status, "ok");
-  if (result.status === "ok") { assert.match(result.reason, /looking for/); assert.equal(result.relevance, 93); }
+  if (result.status === "ok") { assert.equal(result.reason, "You share a specific interest."); assert.equal(result.relevance, 93); }
   raw.answers.relevance.confidence = .4;
   const tentative = scanFromAnswers(raw, evidence);
-  if (tentative.status === "ok") { assert.equal(tentative.tentative, true); assert.match(tentative.reason, /limited evidence/); }
+  if (tentative.status === "ok") { assert.equal(tentative.tentative, true); assert.equal(tentative.reason, "You share a specific interest."); }
   raw.answers.post_has_detail.noul = .2;
   assert.equal(scanFromAnswers(raw, evidence).status, "not_enough_data");
 });
