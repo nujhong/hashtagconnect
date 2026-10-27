@@ -27,7 +27,8 @@ const normalize = (text: string) => text.replace(/\s+/g, " ").trim();
 export async function buildProjectProfile(browser: Pick<BrowserRun, "quickAction">, config: JevConfig, input: string, request = fetch): Promise<ProjectDraft> {
   const url = projectUrl.parse(input);
   const page = await browser.quickAction("markdown", {
-    url, gotoOptions: { waitUntil: "networkidle2", timeout: 15_000 }, actionTimeout: 5_000,
+    // Read the document without waiting for analytics and other background requests to settle.
+    url, gotoOptions: { waitUntil: "domcontentloaded", timeout: 15_000 }, actionTimeout: 5_000,
     rejectResourceTypes: ["image", "media", "font"], cacheTTL: 0,
     // Apply to subrequests and redirects too; never turn a project read into an X timeline read.
     rejectRequestPattern: ["^https?://([^/]+\\.)?(x\\.com|twitter\\.com)([:/]|$)"],

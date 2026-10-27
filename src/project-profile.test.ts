@@ -76,3 +76,14 @@ test("confirmed project context supplements an empty bio, changes the scan hash,
 test("oversized rendered output is stopped before inference", async () => {
   await assert.rejects(buildProjectProfile({ quickAction: async () => Response.json({ success: true, result: "x".repeat(512_001) }) }, config, "https://example.com", async () => { assert.fail("No model call for oversized content"); }), /too large/);
 });
+
+
+test("a readable page with ongoing background requests can produce a project preview", async () => {
+  const draft = await buildProjectProfile({ quickAction: async (_action: string, options: unknown) => {
+    // This page's DOM is ready, but analytics keep network-idle from completing.
+    return (options as { gotoOptions: { waitUntil: string } }).gotoOptions.waitUntil === "networkidle2"
+      ? Response.json({ success: false, errors: [{ code: 6002, message: "Request timed out" }] }, { status: 422 })
+      : Response.json({ success: true, result: page });
+  } }, config, "https://studio.example/", async () => modelResponse({ summary, excerpt }));
+  assert.equal(draft.summary, summary);
+});
