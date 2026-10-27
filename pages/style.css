@@ -2820,3 +2820,9 @@ label.set-row {
 .ev-empty { gap: 6px; border-style: dashed; border-color: var(--faint); background: none; box-shadow: none; }
 .ev-empty b { font: 700 16px/1.25 var(--display); letter-spacing: -0.015em; }
 .ev-empty .link { justify-self: start; margin-top: 2px; color: var(--scan-text); font-size: 13px; }
+
+/* Footer links to the maker on X and the public source: quiet, icon-sized, at least a 32px target. */
+.foot-links { display: inline-flex; align-items: center; gap: 4px; }
+.foot-links a { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 10px; color: var(--muted); transition: color 0.15s, background 0.15s; }
+.foot-links a:hover { color: var(--ink); background: color-mix(in srgb, var(--ink) 8%, transparent); }
+.foot-links svg { width: 16px; height: 16px; fill: currentColor; }
