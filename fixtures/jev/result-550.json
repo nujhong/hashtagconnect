@@ -1,0 +1,60 @@
+{
+  "result": {
+    "model": "jev-1.14.0",
+    "answers": {
+      "ai_present": {
+        "type": "noul",
+        "noul": 0.9
+      },
+      "ai_box": {
+        "type": "box",
+        "box": {
+          "top": 0.35,
+          "bottom": 0.42,
+          "left": 0.04,
+          "right": 0.21
+        },
+        "confidence": 0.98
+      },
+      "ceramics_present": {
+        "type": "noul",
+        "noul": 0.01
+      },
+      "ceramics_box": {
+        "type": "box",
+        "box": {
+          "top": 0.55,
+          "bottom": 0.58,
+          "left": 0.02,
+          "right": 0.55
+        },
+        "confidence": 0.1
+      }
+    },
+    "usage": {
+      "input_tokens": 1370,
+      "output_tokens": 74
+    }
+  },
+  "geometry": {
+    "post": {
+      "bottom": 773.6374969482422,
+      "height": 536,
+      "left": 136,
+      "right": 686,
+      "top": 237.6374969482422,
+      "width": 550,
+      "x": 136,
+      "y": 237.6374969482422
+    },
+    "ready": true,
+    "viewport": {
+      "height": 1120,
+      "width": 1280
+    }
+  },
+  "image": {
+    "width": 550,
+    "height": 536
+  }
+}

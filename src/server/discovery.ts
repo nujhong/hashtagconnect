@@ -2,7 +2,7 @@ import { people, personStates, posts, postStates } from "@schema";
 import { and, db, desc, eq, isNotNull, or, sql } from "void/db";
 import { HTTPException } from "hono/http-exception";
 import { z } from "zod";
-import { postFromUrl, type Discovery } from "../people";
+import type { Discovery } from "../people";
 import { platformMembership } from "./membership";
 
 const personFields = { id: people.id, handle: people.handle, profileUrl: people.profileUrl };
@@ -66,23 +66,4 @@ export async function resolveTarget(userId: string, target: StateTarget) {
     .orderBy(desc(posts.pooledAt)).limit(1);
   if (!person) throw new HTTPException(404, { message: "This person is no longer in your pool or Stash." });
   return person;
-}
-
-/** Saves only to the authenticated viewer's Stash; shared discovery has no public write route. */
-export async function savePost(userId: string, url: string) {
-  const post = postFromUrl(url);
-  if (!post) throw new HTTPException(400, { message: "Paste an HTTPS post URL from x.com or twitter.com." });
-  const { id, addedAt } = post;
-  const [linked] = await db.select({ personId: posts.personId }).from(posts).where(eq(posts.id, id));
-  if (linked?.personId) {
-    await db.insert(personStates).values({ userId, personId: linked.personId, sourcePostId: id, choice: "save", updatedAt: addedAt })
-      .onConflictDoUpdate({ target: [personStates.userId, personStates.personId], set: { choice: "save", sourcePostId: id, updatedAt: addedAt } });
-  } else {
-    await db.batch([
-      db.insert(posts).values({ id, url: post.url, addedAt }).onConflictDoNothing(),
-      db.insert(postStates).values({ userId, postId: id, choice: "save", updatedAt: addedAt })
-        .onConflictDoUpdate({ target: [postStates.userId, postStates.postId], set: { choice: "save", updatedAt: addedAt } }),
-    ]);
-  }
-  return listPosts(userId);
 }

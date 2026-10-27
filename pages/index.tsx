@@ -4,7 +4,7 @@ import { auth, fetch as api, FetchError } from "void/client";
 import type { ViewerProfile } from "../src/project-profile";
 import type { ScanAvailability } from "../src/scan-contract";
 import type { Props } from "./index.server";
-import { dedupePeople, postFromUrl, timeAgo, type Choice, type Discovery, type Person, type PersonEntry, type Post } from "../src/people";
+import { dedupePeople, timeAgo, type Choice, type Discovery, type Person, type PersonEntry, type Post } from "../src/people";
 import { lettersKey, previewKey, restorePreview, type Tags } from "../src/sandbox";
 import { SignInSheet, beginXSignIn, readAuthReturn, type Account, type AuthStep } from "../src/components/auth";
 import { ConnectionFeedback } from "../src/components/community";
@@ -229,28 +229,6 @@ function App(props: Props) {
       say(`Opened ${opened.length} ${opened.length === 1 ? "tab" : "tabs"}.${blocked ? ` ${blocked} blocked. Allow pop-ups for this site, or use the individual links.` : ""}${failed ? ` Couldn’t save ${failed} to your opened history.` : ""}`);
     });
   }
-  /** A private URL save keeps an existing linked person, or an unlinked post in this viewer's Stash. */
-  async function add(url: string): Promise<string | null> {
-    const parsed = postFromUrl(url);
-    if (!parsed) return "Paste an HTTPS post link from x.com or twitter.com.";
-    let failure: string | null = null;
-    await run(async () => {
-      try {
-        if (preview) {
-          setPosts((rows) => {
-            const existing = rows.find((p) => p.id === parsed.id);
-            const person = existing?.person ?? null;
-            const next = { ...(existing ?? parsed), person, choice: "save" as const };
-            // A linked person's choice applies across their posts.
-            const rest = rows.filter((p) => p.id !== parsed.id).map((p) => person && p.person?.id === person.id ? { ...p, choice: "save" as const } : p);
-            return [next, ...rest];
-          });
-        } else apply(await api("/api/import", { method: "POST", body: { url } }));
-        setList("people"); say("Saved privately to your Stash.");
-      } catch (error) { failure = errorMessage(error); }
-    });
-    return failure;
-  }
   async function clearMine() {
     await run(async () => {
       if (preview) setPosts((rows) => rows.filter((p) => p.pooledAt !== null).map((p) => ({ ...p, choice: null, openedAt: null })));
@@ -344,7 +322,7 @@ function App(props: Props) {
       <Stash dialogRef={shelfRef} open={shelf} onClose={() => setShelf(false)} browserOnly={preview && !account}
         lists={lists} list={list} onList={setList} focusId={focusId} tags={tags} busy={pending}
         unopenedCount={unopened.length} onOpenAll={openStash}
-        onOpen={markOpened} onView={show} onMove={moveEntry} onAdd={add} />
+        onOpen={markOpened} onView={show} onMove={moveEntry} />
     </div>
 
     <footer className="foot">

@@ -2,7 +2,6 @@ import { useEffect, useState, type RefObject } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { timeAgo, type Choice, type Person, type Post } from "../people";
 import type { Tags } from "../sandbox";
-import { AddPost } from "./add-post";
 import { PostFrame } from "./post-frame";
 import { OpenLink, StashIcon, spring } from "./ui";
 
@@ -28,12 +27,11 @@ type RowActions = {
  *
  * Its job is one list: people you kept, each a big link to their profile on X, with one action to open
  * the remaining links together. View post and Remove sit behind each row's "More". Posts without a
- * confirmed author, people you passed, and adding by link live in quieter sections below the list.
+ * confirmed author and people you passed live in quieter sections below the list.
  */
-export function Stash({ dialogRef, open, onClose, browserOnly, lists, list, onList, onAdd, unopenedCount, onOpenAll, ...row }: {
+export function Stash({ dialogRef, open, onClose, browserOnly, lists, list, onList, unopenedCount, onOpenAll, ...row }: {
   dialogRef: RefObject<HTMLDialogElement | null>; open: boolean; onClose: () => void; browserOnly: boolean;
   lists: Record<StashList, StashEntry[]>; list: StashList; onList: (l: StashList) => void;
-  onAdd: (url: string) => Promise<string | null>;
   unopenedCount: number; onOpenAll: () => void;
 } & RowActions) {
   useEffect(() => {
@@ -82,10 +80,6 @@ export function Stash({ dialogRef, open, onClose, browserOnly, lists, list, onLi
         {looseOpen && <ul className="people-list">{loose.map((entry) => <li key={entry.key}><PersonRow entry={entry} {...row} /></li>)}</ul>}
       </details>}
       {lists.aside.length > 0 && <button className="shelf-link" onClick={() => onList("aside")}>Passed <small>{lists.aside.length}</small></button>}
-      <details className="shelf-section">
-        <summary>Add a post by link</summary>
-        <AddPost busy={row.busy} onAdd={onAdd} />
-      </details>
     </div>}
   </dialog>;
 }
