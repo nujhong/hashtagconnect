@@ -2,7 +2,7 @@ import { useState } from "react";
 import { fetch as api } from "void/client";
 
 /** One optional sentence augments the OAuth bio without changing provider-owned identity fields. */
-export function BioContext({ bio, sentence }: { bio: string | null; sentence: string }) {
+export function BioContext({ bio, sentence, onSaved }: { bio: string | null; sentence: string; onSaved: (sentence: string) => void }) {
   const [value, setValue] = useState(sentence);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -12,12 +12,12 @@ export function BioContext({ bio, sentence }: { bio: string | null; sentence: st
     {bio && <blockquote className="context-bio">{bio}</blockquote>}
     <form className="community-form" onSubmit={async (event) => {
       event.preventDefault(); setBusy(true); setError("");
-      try { await api("/api/context", { method: "POST", body: { sentence: value } }); window.location.reload(); }
+      try { const saved = await api("/api/context", { method: "POST", body: { sentence: value } }); onSaved(saved.sentence); }
       catch { setError("Couldn’t save your context. Try again."); setBusy(false); }
     }}>
       <label htmlFor="viewer-context">What are you building or sharing? <small>Optional</small></label>
       <textarea id="viewer-context" value={value} maxLength={280} rows={3} onChange={(event) => setValue(event.target.value)} />
-      <p className="fine">Private scan context. Leave blank to use only your X bio.</p>
+      <p className="fine">Private scan context. Leave blank to use your bio and saved project.</p>
       <button className="btn" disabled={busy}>{busy ? "Saving…" : "Save context"}</button>
       {error && <p className="error" role="alert">{error}</p>}
     </form>

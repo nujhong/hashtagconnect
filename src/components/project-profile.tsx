@@ -3,7 +3,7 @@ import { fetch as api, FetchError } from "void/client";
 import { bioProjectLinks, type ProjectDraft, type ProjectProfile } from "../project-profile";
 
 /** A single optional link becomes an editable preview. Only Save changes future scans. */
-export function ProjectProfileEditor({ bio, project }: { bio: string | null; project: ProjectProfile | null }) {
+export function ProjectProfileEditor({ bio, project, onSaved }: { bio: string | null; project: ProjectProfile | null; onSaved: (project: ProjectProfile | null) => void }) {
   const [url, setUrl] = useState(project?.url ?? "");
   const [draft, setDraft] = useState<ProjectDraft | null>(null);
   const [summary, setSummary] = useState(project?.summary ?? "");
@@ -12,7 +12,7 @@ export function ProjectProfileEditor({ bio, project }: { bio: string | null; pro
   const suggestions = bioProjectLinks(bio).filter((link) => link !== project?.url);
   async function save(value: ProjectProfile | null) {
     setBusy("saving"); setError("");
-    try { await api("/api/project", { method: "POST", body: { project: value } }); window.location.reload(); }
+    try { const saved = await api("/api/project", { method: "POST", body: { project: value } }); onSaved(saved.project); }
     catch { setError("Couldn’t save your project. Try again."); setBusy(null); }
   }
   return <section className="project-editor" aria-labelledby="project-heading">

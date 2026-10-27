@@ -74,3 +74,14 @@ The browser binding uses `remote: true` for local development and the configured
 ## Possible interest presets (design direction)
 
 A sample of connect posts could inform two small, optional sets: **topics/work** and **connection goals**. Examples are placeholder design ideas, not measured categories: design, indie apps, writing; peers, feedback, collaboration. Let people confirm suggestions and keep the project text as context. A corpus would help choose vocabulary and coverage; it is not a substitute for a member’s own preferences or an automatic way to train Jev. Collection and the presets UI are not part of this implementation.
+
+
+## Relevance explanations and project fit
+
+The scan is labelled **Relevance**. A quiet input link shows the actual bio/context and saved project domain (including the repository path for GitHub), and opens profile settings. Saving project or sentence context updates parent state, closes the sheet and remounts the scan for the same person. It preserves the current selection, filters and Stash. The server still reads persisted profile data by session; the client cannot submit evidence to the scan endpoint.
+
+When a saved project exists, a fifth Noul question asks about its subject, purpose and audience in relation to the invitation. This **Project fit** signal uses the project alone, while Interests in common and Related work use the whole supplied profile. The signals can overlap; none is averaged into the overall Score. There is no third row without project evidence, and no additional panels on mobile. A missing viewer profile offers Add a project; a vague target post does not imply the viewer must improve their profile.
+
+After a successful Jev assessment, Gemini 2.5 Flash Lite drafts one concrete explanation, at most 24 words / 160 characters, through the same logged gateway. It receives the evidence and completed rating, cannot change any score, and must cite an exact viewer excerpt plus an exact excerpt within the post paragraph. Invalid, unsupported-reference, truncated or timed-out generation falls back to the existing rubric summary; it never fails the rating. Exact-excerpt checks establish traceable references, not proof of semantic entailment. The short sentence remains model-generated. The request has a 10-second timeout and no retry. A successful uncached scan now makes up to two model calls; the daily allowance still counts scan attempts, not individual provider calls. No additional X API or browser page reads are added.
+
+Production cached results can include the short supporting excerpts for the explanation; full post HTML is not persisted. The cache interpretation version changed to prevent old results from masking the new signal and copy. The fictional demo includes a generic project and is labelled explicitly; real profile labels never use that sample.

@@ -31,3 +31,17 @@ export function bioProjectLinks(bio: string | null): string[] {
     return parsed.success ? [parsed.data] : [];
   }))].slice(0, 3);
 }
+
+export type ViewerProfile = { bio: string | null; sentence: string; project: ProjectProfile | null };
+
+/** Name only the inputs actually supplied; a project is labelled by its own URL, never a sample brand. */
+export function profileInputLabel(profile: ViewerProfile): string {
+  const parts: string[] = [];
+  if (profile.bio?.trim()) parts.push("your bio");
+  if (profile.sentence.trim()) parts.push("your context");
+  if (profile.project) {
+    const url = new URL(profile.project.url);
+    parts.push(url.hostname.replace(/^www\./, "") + (url.hostname === "github.com" ? url.pathname.replace(/\/$/, "") : ""));
+  }
+  return parts.length ? `Using ${parts.join(" + ")}` : "Add context for your scan";
+}

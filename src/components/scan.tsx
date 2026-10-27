@@ -3,6 +3,7 @@ import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { fetch as api, FetchError } from "void/client";
 import { postUrl, timeAgo } from "../people";
 import type { ScanAvailability, ScanResult } from "../scan-contract";
+import { profileInputLabel, type ViewerProfile } from "../project-profile";
 import { scheduleScan } from "../auto-scan";
 
 /**
@@ -26,12 +27,12 @@ const DEMO: ScanResult = {
   model: "demo",
   checkedAt: new Date(0).toISOString(),
   relevance: 78,
-  reason: "You both describe an interest in local-first tools.",
+  reason: "Your local-first desktop project fits their interest in building small desktop tools.",
   tentative: false,
   confidence: 0.88,
-  signals: { sharedInterest: 0.84, relatedWork: 0.92 },
+  signals: { sharedInterest: 0.84, relatedWork: 0.92, projectFit: 0.9 },
   evidence: { bioDetail: 0.98, postDetail: 0.97 },
-  source: { bio: "Building local-first desktop apps. Design, small tools and side projects.", username: "demo", postId: "demo-post" },
+  source: { bio: "Building local-first desktop apps. Design, small tools and side projects.", username: "demo", postId: "demo-post", project: { url: "https://example.com/", summary: "A local-first desktop app for organising personal research." } },
   unknowns: ["Who runs the account", "Whether they’ll reply", "Anything beyond your bio and this post"],
 };
 
@@ -47,8 +48,8 @@ async function liveScan(postId: string, signal: AbortSignal): Promise<ScanResult
   return { status: "unavailable", reason: "Scan isn’t reachable right now.", pauseAuto: true };
 }
 
-export function ScanPanel({ access, availability, postId, pausedReason, onPause, onResume, onSignIn, onProfile }: {
-  access: ScanAccess; availability: ScanAvailability; postId: string; pausedReason: string | null;
+export function ScanPanel({ profile, access, availability, postId, pausedReason, onPause, onResume, onSignIn, onProfile }: {
+  profile: ViewerProfile; access: ScanAccess; availability: ScanAvailability; postId: string; pausedReason: string | null;
   onPause: (reason: string) => void; onResume: () => void; onSignIn: () => void; onProfile: () => void;
 }) {
   const [phase, setPhase] = useState<Phase>({ kind: "idle" });
@@ -71,16 +72,19 @@ export function ScanPanel({ access, availability, postId, pausedReason, onPause,
   const scanning = canScan && !pausedReason && phase.kind !== "done";
   const done = phase.kind === "done" && !pausedReason;
   const scored = done && phase.kind === "done" && phase.result.status === "ok";
-  return <section id="bio-scan" className="post-analysis" aria-label="Bio scan">
-    {!scored && <header className="scan-heading">
-      <p className="scan-label"><span className="scan-glyph" aria-hidden="true" />Bio scan</p>
+  const showInputs = access === "signed-in" && Boolean(profile.bio?.trim() || profile.sentence.trim() || profile.project)
+    && !(done && phase.kind === "done" && phase.demo);
+  return <section id="relevance" className="post-analysis" aria-label="Relevance">
+    {(!scored || showInputs) && <header className="scan-heading">
+      {!scored && <p className="scan-label">Relevance</p>}
+      {showInputs && <button className="scan-inputs" onClick={onProfile} title={profileInputLabel(profile)}>{profileInputLabel(profile)}</button>}
     </header>}
     <div className="scan">
     <AnimatePresence mode="wait" initial={false}>
       {!canScan && !done && <motion.div key="idle" className="scan-step" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={spring}>
         {access !== "signed-in" ? <>
           <h2 className="scan-title">Relevant to you?</h2>
-          <p className="scan-lede">Sign in to automatically compare each invitation with your X bio.</p>
+          <p className="scan-lede">Sign in to see how each invitation relates to your profile.</p>
           <button className="btn scan-go" onClick={onSignIn}>Continue with X <span aria-hidden="true">↗</span></button>
           {access === "preview" && <p className="scan-note">Preview session. Real scans need a real sign-in.</p>}
         </> : availability.status !== "ready" && <Result result={availability} demo={false} onSignIn={onSignIn} onProfile={onProfile} />}
@@ -120,11 +124,12 @@ function Result({ result, demo, onSignIn, onProfile }: { result: ScanResult; dem
   if (result.status === "needs_bio") return <>
     <h2 className="scan-title">Bring your bio.</h2>
     <p className="scan-lede">{result.reason}</p>
-    <button className="big scan-go" onClick={onSignIn}>Refresh X bio</button>
+    <div className="scan-again"><button className="btn" onClick={onProfile}>Add a project</button><button className="link" onClick={onSignIn}>Refresh X bio</button></div>
   </>;
   if (result.status === "not_enough_data") return <>
     <h2 className="scan-title">Not enough to go on.</h2>
     <p className="scan-lede">{result.reason}</p>
+    {result.missing === "viewer" && <button className="btn" onClick={onProfile}>Add a project</button>}
   </>;
   if (result.status === "unavailable") return <>
     <h2 className="scan-title">Scan isn’t available right now.</h2>
@@ -136,18 +141,19 @@ function Result({ result, demo, onSignIn, onProfile }: { result: ScanResult; dem
       <div className="scan-overall">
         <motion.div className="scan-rating" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={spring}>
           <p className="scan-score" aria-label={`${result.relevance} out of 100. Relevance to you.`}>{result.relevance}<span aria-hidden="true">/100</span></p>
-          <div className="scan-rating-copy"><span className="scan-kicker">Bio scan</span><p>Relevance<span className="scan-long-label"> to you</span></p>{result.tentative && <span className="scan-tentative">Tentative</span>}</div>
+          <div className="scan-rating-copy"><p>Relevance<span className="scan-long-label"> to you</span></p>{result.tentative && <span className="scan-tentative">Tentative</span>}</div>
         </motion.div>
       </div>
       <dl className="scan-signals" aria-label="Supporting signals">
         <div><dt>Interests in common</dt><dd>{Math.round(result.signals.sharedInterest * 100)}<span>%</span></dd></div>
         <div><dt>Related work</dt><dd>{Math.round(result.signals.relatedWork * 100)}<span>%</span></dd></div>
+        {result.signals.projectFit !== undefined && <div><dt>Project fit</dt><dd>{Math.round(result.signals.projectFit * 100)}<span>%</span></dd></div>}
       </dl>
     </div>
     <details className="scan-evidence">
       <summary>Sources</summary>
       {demo
-        ? <div className="scan-quotes"><Quote who="Them" text="Shipping a tiny desktop app this weekend. Who else is building local-first tools?" /><Quote who="You" text={result.source.bio} /></div>
+        ? <div className="scan-quotes"><Quote who="Them" text="Shipping a tiny desktop app this weekend. Who else is building local-first tools?" /><Quote who="You" text={result.source.bio} />{result.source.project && <Quote who="Your project (demo)" text={result.source.project.summary} />}</div>
         : <SourcePair source={result.source} />}
       {!demo && <p className="scan-foot">Scanned {timeAgo(Date.parse(result.checkedAt))}.</p>}
     </details>

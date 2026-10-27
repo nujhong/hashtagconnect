@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, MotionConfig, motion, useReducedMotion } from "motion/react";
 import { auth, fetch as api, FetchError } from "void/client";
+import type { ViewerProfile } from "../src/project-profile";
+import type { ScanAvailability } from "../src/scan-contract";
 import type { Props } from "./index.server";
 import { dedupePeople, postFromUrl, timeAgo, type Choice, type Discovery, type Person, type PersonEntry, type Post } from "../src/people";
 import { lettersKey, previewKey, restorePreview, type Tags } from "../src/sandbox";
@@ -48,6 +50,8 @@ function App(props: Props) {
   const [modal, setModal] = useState<"privacy" | null>(null);
   const [authStep, setAuthStep] = useState<{ step: AuthStep; code?: string } | null>(null);
   const [fly, setFly] = useState<Fly | null>(null);
+  const [viewerProfile, setViewerProfile] = useState<ViewerProfile>({ bio: props.bio, sentence: props.context, project: props.project });
+  const [profileVersion, setProfileVersion] = useState(0);
   const [scanPause, setScanPause] = useState<string | null>(null);
   const [feedback, setFeedback] = useState(props.feedback);
   const [hasOpened, setHasOpened] = useState(props.hasOpened);
@@ -135,6 +139,13 @@ function App(props: Props) {
     try { localStorage.setItem(lettersKey, value ? "on" : "off"); } catch { /* This visit still respects the choice. */ }
   }
 
+  function updateProfile(changes: Partial<Pick<ViewerProfile, "sentence" | "project">>) {
+    setViewerProfile((profile) => ({ ...profile, ...changes }));
+    setProfileVersion((version) => version + 1);
+    setScanPause(null);
+    setModal(null);
+    say("Profile updated.");
+  }
   function say(text: string, undo?: () => void) { setNotice({ text, undo }); }
   /** Server responses are the source of truth: every mutation returns the viewer's whole Discovery. */
   function apply(d: Discovery) { setPosts(d.posts); setPeople(d.people); setTags(Object.fromEntries(d.posts.map((post) => [post.id, post.tags ?? []]))); }
@@ -262,7 +273,10 @@ function App(props: Props) {
   const scanAccess: ScanAccess = props.user ? "signed-in" : previewAccount ? "preview" : "signed-out";
   const status = current?.choice === "save" ? "You kept this" : current?.choice === "skip" ? "You passed on this" : null;
   const scope = preview ? (account ? "Preview session" : "Preview") : null;
-  const scanPanel = current && <ScanPanel key={current.id} access={scanAccess} availability={props.scanAvailability} postId={current.id}
+  const hasProfile = Boolean(viewerProfile.bio?.trim() || viewerProfile.sentence.trim() || viewerProfile.project?.summary.trim());
+  const availability: ScanAvailability = props.scanPolicy.status !== "ready" || hasProfile ? props.scanPolicy
+    : { status: viewerProfile.bio === null ? "needs_bio" : "empty_bio", reason: "Add a project link or refresh your X bio to give scans some context." };
+  const scanPanel = current && <ScanPanel key={`${current.id}:${profileVersion}`} profile={viewerProfile} access={scanAccess} availability={availability} postId={current.id}
     pausedReason={scanPause} onPause={setScanPause} onResume={() => setScanPause(null)} onProfile={() => setModal("privacy")} onSignIn={signIn} />;
 
   return <div className="app">
@@ -351,7 +365,7 @@ function App(props: Props) {
       onStep={(step, code) => setAuthStep({ step, code })} onClose={() => setAuthStep(null)}
       onPreviewReturn={() => { setAuthStep(null); setPreviewAccount(true); say("Preview sign-in. No real session was created."); }} />}
 
-    {modal === "privacy" && <Settings context={props.user ? { bio: props.bio, sentence: props.context, project: props.project } : undefined} letters={letters} busy={pending}
+    {modal === "privacy" && <Settings context={props.user ? viewerProfile : undefined} onProfileChange={updateProfile} letters={letters} busy={pending}
       onLetters={setLetterShortcuts} onClear={clearMine} onClose={() => setModal(null)} />}
   </div>;
 }

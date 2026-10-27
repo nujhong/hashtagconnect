@@ -16,16 +16,17 @@ export type ScanResult =
       checkedAt: string;
       /** Jev's position on the text-relevance rubric, normalized to 0–100; never a probability. */
       relevance: number;
-      /** Plain-language summary of the strongest supported rubric level, not generated biography. */
+      /** Plain-language summary of the strongest supported rubric level, with an optional short, source-checked explanation. */
       reason: string;
       tentative: boolean;
       confidence: number;
-      signals: { sharedInterest: number; relatedWork: number };
+      signals: { sharedInterest: number; relatedWork: number; projectFit?: number };
+      explanation?: { viewerSource: "bio" | "context" | "project"; viewerQuote: string; postQuote: string };
       evidence: { bioDetail: number; postDetail: number };
       source: { bio: string; username: string; postId: string; context?: string; project?: ProjectProfile };
       unknowns: string[];
     }
   | { status: "needs_bio"; reason: string }
   | { status: "empty_bio"; reason: string }
-  | { status: "not_enough_data"; reason: string }
+  | { status: "not_enough_data"; reason: string; missing?: "viewer" | "post" }
   | { status: "unavailable"; reason: string; pauseAuto?: boolean };
