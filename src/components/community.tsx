@@ -3,11 +3,11 @@ import { fetch as api } from "void/client";
 
 /** One optional sentence augments the OAuth bio without changing provider-owned identity fields. */
 export function BioContext({ bio, sentence }: { bio: string | null; sentence: string }) {
-  const [value, setValue] = useState(sentence || (bio ?? "").slice(0, 280));
+  const [value, setValue] = useState(sentence);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   return <details className="access context-editor">
-    <summary>Your bio & context</summary>
+    <summary>Your X bio & extra context</summary>
     <p className="fine">Scans use your X bio. Add or edit one sentence only if it helps.</p>
     {bio && <blockquote className="context-bio">{bio}</blockquote>}
     <form className="community-form" onSubmit={async (event) => {

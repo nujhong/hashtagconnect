@@ -30,6 +30,6 @@ export function scanAvailability(env: ScanEnvironment, bio?: string | null, prod
   const setup = scanSetup(env, production);
   if (setup.status !== "ready") return setup;
   if (bio === null) return { status: "needs_bio", reason: "Refresh your X sign-in once to bring in your bio." };
-  if (bio !== undefined && !bio.trim()) return { status: "empty_bio", reason: "X returned an empty bio for this account. Use an X account with a bio, or update it on X before refreshing." };
+  if (bio !== undefined && !bio.trim()) return { status: "empty_bio", reason: "Add a project link to give scans some context, or update your X bio and sign in again." };
   return { status: "ready", dailyLimit: setup.dailyLimit };
 }

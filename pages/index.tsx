@@ -269,7 +269,7 @@ function App(props: Props) {
   const status = current?.choice === "save" ? "You kept this" : current?.choice === "skip" ? "You passed on this" : null;
   const scope = preview ? (account ? "Preview session" : "Preview") : null;
   const scanPanel = current && <ScanPanel key={current.id} access={scanAccess} availability={props.scanAvailability} postId={current.id}
-    pausedReason={scanPause} onPause={setScanPause} onResume={() => setScanPause(null)} onSignIn={signIn} />;
+    pausedReason={scanPause} onPause={setScanPause} onResume={() => setScanPause(null)} onProfile={() => setModal("privacy")} onSignIn={signIn} />;
 
   return <div className="app">
     <a className="skip-link" href="#post">Skip to the current post</a>
@@ -341,7 +341,7 @@ function App(props: Props) {
     </div>
 
     <footer className="foot">
-      <button className="link" onClick={() => setModal("privacy")}>{props.user ? "Your bio & settings" : "Settings & privacy"}</button>
+      <button className="link" onClick={() => setModal("privacy")}>{props.user ? "Your profile & settings" : "Settings & privacy"}</button>
       {!props.authReady && !props.user && <span>X sign-in isn’t configured here, so sign-in runs as a preview.</span>}
       {props.user && hasOpened && feedback === null && <ConnectionFeedback onAnswer={async (useful) => {
         await api("/api/activity", { method: "POST", body: { event: "feedback", useful } }); setFeedback(useful);
@@ -358,7 +358,7 @@ function App(props: Props) {
       onStep={(step, code) => setAuthStep({ step, code })} onClose={() => setAuthStep(null)}
       onPreviewReturn={() => { setAuthStep(null); setPreviewAccount(true); say("Preview sign-in. No real session was created."); }} />}
 
-    {modal === "privacy" && <Settings context={props.user ? { bio: props.bio, sentence: props.context } : undefined} embeds={embeds} letters={letters} busy={pending}
+    {modal === "privacy" && <Settings context={props.user ? { bio: props.bio, sentence: props.context, project: props.project } : undefined} embeds={embeds} letters={letters} busy={pending}
       onConsent={setConsent} onLetters={setLetterShortcuts} onClear={clearMine} onClose={() => setModal(null)} />}
   </div>;
 }

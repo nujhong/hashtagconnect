@@ -67,7 +67,8 @@ CREATE TABLE `scan_usage` (
 --> statement-breakpoint
 CREATE TABLE `viewer_context` (
 	`user_id` text PRIMARY KEY NOT NULL,
-	`sentence` text NOT NULL
+	`sentence` text NOT NULL,
+	`project` text
 );
 --> statement-breakpoint
 CREATE TABLE `account` (

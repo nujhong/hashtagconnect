@@ -9,7 +9,7 @@ import { scheduleScan } from "../auto-scan";
  * Profile scan UI. A live scan needs a genuine server session and runs only through POST /api/scan
  * (server-owned; see src/scan-contract.ts). The auth preview and signed-out visitors can only run the demo,
  * which uses fictional data and is never attached to the real author of the post beside it.
- * Results compare the OAuth bio with one connect post, show their sources, and state the unknowns:
+ * Results compare the OAuth bio and confirmed private context with one connect post, show their sources, and state the unknowns:
  * a text-relevance rating, not relationship compatibility or a human/bot verdict.
  * Scans run automatically for the current post, in a full-width row above the invitation and decisions.
  * Leaving cancels the pending client request. Local revisits start fresh; production can reuse unchanged inputs.
@@ -47,9 +47,9 @@ async function liveScan(postId: string, signal: AbortSignal): Promise<ScanResult
   return { status: "unavailable", reason: "Scan isn’t reachable right now.", pauseAuto: true };
 }
 
-export function ScanPanel({ access, availability, postId, pausedReason, onPause, onResume, onSignIn }: {
+export function ScanPanel({ access, availability, postId, pausedReason, onPause, onResume, onSignIn, onProfile }: {
   access: ScanAccess; availability: ScanAvailability; postId: string; pausedReason: string | null;
-  onPause: (reason: string) => void; onResume: () => void; onSignIn: () => void;
+  onPause: (reason: string) => void; onResume: () => void; onSignIn: () => void; onProfile: () => void;
 }) {
   const [phase, setPhase] = useState<Phase>({ kind: "idle" });
   const [attempt, setAttempt] = useState(0);
@@ -83,13 +83,13 @@ export function ScanPanel({ access, availability, postId, pausedReason, onPause,
           <p className="scan-lede">Sign in to automatically compare each invitation with your X bio.</p>
           <button className="btn scan-go" onClick={onSignIn}>Continue with X <span aria-hidden="true">↗</span></button>
           {access === "preview" && <p className="scan-note">Preview session. Real scans need a real sign-in.</p>}
-        </> : availability.status !== "ready" && <Result result={availability} demo={false} onSignIn={onSignIn} />}
+        </> : availability.status !== "ready" && <Result result={availability} demo={false} onSignIn={onSignIn} onProfile={onProfile} />}
         <button className="scan-demo-btn" onClick={() => setPhase({ kind: "done", demo: true, result: DEMO })}>Try the demo</button>
       </motion.div>}
 
       {scanning && <motion.div key="scanning" className="scan-step" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={spring}>
         <div className="scan-progress"><Radar /><h2 className="scan-title" role="status">Comparing…</h2></div>
-        <p className="scan-lede">Reading your bio alongside this invitation.</p>
+        <p className="scan-lede">Comparing your profile with this invitation.</p>
       </motion.div>}
 
       {pausedReason && <motion.div key="paused" className="scan-step" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={spring}>
@@ -100,7 +100,7 @@ export function ScanPanel({ access, availability, postId, pausedReason, onPause,
 
       {done && phase.kind === "done" && <motion.div key="done" className="scan-step" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={spring}>
         {phase.demo && <p className="scan-demo-tag">Fictional demo</p>}
-        <Result result={phase.result} demo={phase.demo} onSignIn={onSignIn} />
+        <Result result={phase.result} demo={phase.demo} onSignIn={onSignIn} onProfile={onProfile} />
         {(phase.demo || phase.result.status === "unavailable") && <div className="scan-again">
           {phase.demo && <button className="btn sm" onClick={() => setPhase({ kind: "idle" })}>Close demo</button>}
           {phase.result.status === "unavailable" && !phase.demo && <button className="btn sm" onClick={retry}>Retry scan</button>}
@@ -111,11 +111,11 @@ export function ScanPanel({ access, availability, postId, pausedReason, onPause,
   </section>;
 }
 
-function Result({ result, demo, onSignIn }: { result: ScanResult; demo: boolean; onSignIn: () => void }) {
+function Result({ result, demo, onSignIn, onProfile }: { result: ScanResult; demo: boolean; onSignIn: () => void; onProfile: () => void }) {
   if (result.status === "empty_bio") return <>
-    <h2 className="scan-title">No bio on this account.</h2>
+    <h2 className="scan-title">A little more about you.</h2>
     <p className="scan-lede">{result.reason}</p>
-    <button className="btn" onClick={onSignIn}>Return to X sign-in</button>
+    <button className="btn" onClick={onProfile}>Add a project</button>
   </>;
   if (result.status === "needs_bio") return <>
     <h2 className="scan-title">Bring your bio.</h2>
@@ -167,6 +167,7 @@ function SourcePair({ source }: { source: Extract<ScanResult, { status: "ok" }>[
     </div>
     <p className="scan-bio">{source.bio || "No X bio supplied."}</p>
     {source.context && <><b>Your optional context</b><p className="scan-bio">{source.context}</p></>}
+    {source.project && <><div className="scan-source-head"><b>Your project</b><a href={source.project.url} target="_blank" rel="noopener noreferrer">Source ↗</a></div><p className="scan-bio">{source.project.summary}</p></>}
     <div className="scan-source-head">
       <a href={postUrl(source.postId)} target="_blank" rel="noopener noreferrer">Their connect post <span aria-hidden="true">↗</span></a>
     </div>

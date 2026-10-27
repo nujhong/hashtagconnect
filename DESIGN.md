@@ -46,7 +46,8 @@ Tokens are CSS custom properties in `pages/style.css`. Slab elements redefine th
 ## Discovery and participation
 
 - Discovery belongs to the service: collect public #connect posts into one shared pool. People do not apply, submit, or wait for approval. The existing seeded pool remains until collection is connected.
-- **Your bio & context**, in Settings, offers one optional “What are you building or sharing?” sentence, prefilled from the bio. It is private scan input and never edits X or makes onboarding mandatory.
+- **Your profile & settings** keeps enrichment optional and inside the existing graphite sheet. One project-link field leads to a short editable description, a supporting excerpt under “From the page”, and **Use this profile**. Links in the X bio are suggestions, never automatic page visits. Only saving adds project context to scans; Remove returns to bio/context alone. Keep the X bio and optional extra sentence in a disclosure below, without pre-filling the sentence with a duplicate bio. No separate onboarding, tag questionnaire or profile dashboard.
+- A project’s subject can support relevance; its features must never become invented personal skills. Scan Sources shows the confirmed project description and original source link. Reading and saving use inline status text; the sheet’s existing entrance motion is sufficient.
 - Hashtag filters use the tags stored with collected posts. No manual publishing controls belong in the browsing interface.
 - Stash copy makes the next action explicit: open profiles, then follow or speak on X. After an opening, a small optional question in the footer asks whether someone was worth connecting with.
 - First-party experiment measurement stays internal; it has no review screen in the browsing experience.

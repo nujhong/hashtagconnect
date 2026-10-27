@@ -15,6 +15,7 @@ export const loader = defineHandler(async () => {
   return {
     context: context?.sentence ?? "",
     bio,
+    project: context?.project ?? null,
     feedback: activity?.feedback ?? null,
     hasOpened: Boolean(activity?.firstOpenAt),
     ...(user ? await listPosts(user.id) : { posts: [], people: [] }),
@@ -24,6 +25,6 @@ export const loader = defineHandler(async () => {
     } : null,
     authReady: Boolean(env.AUTH_TWITTER_CLIENT_ID && env.AUTH_TWITTER_CLIENT_SECRET),
     scanPolicy: scanAvailability(env, undefined, import.meta.env.PROD),
-    scanAvailability: scanAvailability(env, user ? (bio?.trim() || context?.sentence || bio) : undefined, import.meta.env.PROD),
+    scanAvailability: scanAvailability(env, user ? (bio?.trim() || context?.sentence || context?.project?.summary || bio) : undefined, import.meta.env.PROD),
   };
 });

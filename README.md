@@ -27,7 +27,9 @@ The sandbox is seeded with five real #connect posts picked by hand from X search
 
 Discovery is supplied by the service, shared across viewers. Authors do not need to join or request inclusion. The planned starting point is periodic #connect collection; its source and interval are still to be decided. There is no submission, approval or manual publishing flow in the app. Existing posts, people and private saves remain intact.
 
-**Your bio & settings** offers one optional private context sentence. The OAuth bio remains provider-owned. Clearing the sentence returns to bio-only comparisons; saving context invalidates that viewer’s cached results.
+**Your profile & settings** accepts one public project link, with suggestions from URLs in the OAuth bio. Browser Run reads the page; Gemini drafts an editable description through the existing Cloudflare gateway. **Use this profile** adds the confirmed description to Jev alongside the untouched bio and any optional private sentence. Removing it returns to bio/context-only comparisons. Saved changes invalidate that viewer’s cached results.
+
+Browser Run uses the native `BROWSER` binding, configured for the existing Cloudflare account and remote local development. Authenticate Wrangler before running locally. No Browser Run API token is needed. Reading is on demand, one page at a time; source descriptions are private. Production needs an explicit profile-build budget/rate policy before launch.
 
 First-party D1 measurement stores each account’s first Keep and first app-owned link opening, first/last active UTC day, distinct active-day count, and optional usefulness response. Measurement remains internal with no public reporting endpoint. Repeated visits on the same UTC day and repeated actions do not create new conversions. These measurements start when this feature is used; existing history is not backfilled. They do not verify follows, replies or relationships. Preview use is not measured. No external analytics service is added.
 
@@ -35,7 +37,7 @@ First-party D1 measurement stores each account’s first Keep and first app-owne
 
 Before deployment, choose **SCAN_DAILY_LIMIT** (positive integer, global inference attempts per UTC day) and **SCAN_CACHE_TTL_SECONDS** (positive integer). Production builds pause scans when these are missing; no budget is invented. Set the daily limit to zero to pause inference. These are request limits, not a dollar budget; gateway/provider limits still apply. Development remains unlimited by default and never reuses stored scan results.
 
-Production cache keys include the native Jev request, rubric/interpretation version and username, and records are isolated by viewer and post. Every scan still revalidates oEmbed before reuse; removed/unavailable posts do not fall back to a cached answer. Only successful or insufficient-evidence results are stored. Changed bio/context/post input triggers a fresh scan. Each viewer/post keeps at most one record; expired records are ignored and replaced on the next scan (no scheduled purge). Concurrent cache misses can both reach inference, but the atomic daily reservation bounds total attempts. No distributed lock or background collector is added.
+Production cache keys include the native Jev request, rubric/interpretation version and username, and records are isolated by viewer and post. Every scan still revalidates oEmbed before reuse; removed/unavailable posts do not fall back to a cached answer. Only successful or insufficient-evidence results are stored. Changed bio/context/project/post input triggers a fresh scan. Each viewer/post keeps at most one record; expired records are ignored and replaced on the next scan (no scheduled purge). Concurrent cache misses can both reach inference, but the atomic daily reservation bounds total attempts. No distributed lock or background collector is added.
 
 The repository is undeployed and has **one initial schema migration**, including application and auth tables. It installs into a fresh database with `npx void db migrate`. The existing local database was backed up, its one pre-existing foreign-key mismatch corrected, and its migration ledger rebased without deleting any application rows. Do not replay this baseline over an existing populated database with an old migration ledger. Once deployed, preserve that baseline and add forward migrations.
 
@@ -85,6 +87,8 @@ For isolated browser comparisons, see [the standalone fixtures](fixtures/embeds/
 | POST /api/opened | Record a click on an app-owned profile or fallback post link |
 | POST /api/scan | Authenticated bio/context / oEmbed-post comparison through Jev |
 | POST /api/context | Save or clear the viewer’s optional scan context |
+| POST /api/project-preview | Authenticated Browser Run page read and Gemini profile draft; no persistence |
+| POST /api/project | Save or remove the authenticated viewer’s confirmed project description |
 | POST /api/activity | Record an active UTC day or optional usefulness feedback |
 
 ## Shared-pool data

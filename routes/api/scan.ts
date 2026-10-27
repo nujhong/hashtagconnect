@@ -23,7 +23,7 @@ export const POST = defineHandler.withValidator({ body: z.object({ postId: z.str
   const bio = "xBio" in user && typeof user.xBio === "string" ? user.xBio : null;
   const [context] = await db.select().from(viewerContext).where(eq(viewerContext.userId, user.id));
   const sentence = context?.sentence || undefined;
-  const available = scanAvailability(env, bio?.trim() || sentence || bio, import.meta.env.PROD);
+  const available = scanAvailability(env, bio?.trim() || sentence || context?.project?.summary || bio, import.meta.env.PROD);
   if (available.status !== "ready") return available;
 
   const username = "xUsername" in user && typeof user.xUsername === "string" ? user.xUsername : "";
@@ -31,6 +31,7 @@ export const POST = defineHandler.withValidator({ body: z.object({ postId: z.str
     // Fetch oEmbed before checking the hash: changes or removal on X must not return stale evidence.
     const evidence = await loadPublicEvidence(body.postId, { bio: bio ?? "", username });
     evidence.viewer.context = sentence;
+    evidence.viewer.project = context?.project ?? undefined;
     const inputHash = await scanInputHash(evidence);
     if (setup.cacheTtlSeconds) {
       const [cached] = await db.select().from(scanCache).where(and(

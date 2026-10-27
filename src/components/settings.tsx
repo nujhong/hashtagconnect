@@ -1,22 +1,24 @@
 import { useState } from "react";
+import { ProjectProfileEditor } from "./project-profile";
+import type { ProjectProfile } from "../project-profile";
 import { BioContext } from "./community";
 import { Keycap, Modal } from "./ui";
 
 /** Settings & privacy: what's stored, the scan's data path, embed consent, letter shortcuts, and clearing your data. */
 export function Settings({ context, embeds, letters, busy, onConsent, onLetters, onClear, onClose }: {
-  context?: { bio: string | null; sentence: string };
+  context?: { bio: string | null; sentence: string; project: ProjectProfile | null };
   embeds: boolean; letters: boolean; busy: boolean;
   onConsent: (v: boolean) => void; onLetters: (v: boolean) => void; onClear: () => void; onClose: () => void;
 }) {
   const [clearing, setClearing] = useState(false);
   return <Modal label="Settings and privacy" onClose={onClose}>
-    <h2>Settings and privacy</h2>
-    {context && <BioContext {...context} />}
+    <h2>{context ? "Your profile" : "Settings and privacy"}</h2>
+    {context && <><ProjectProfileEditor bio={context.bio} project={context.project} /><BioContext bio={context.bio} sentence={context.sentence} /></>}
     <details className="access settings-info">
       <summary>Scoring & privacy</summary>
-      <p>Relevance compares your X bio and any optional context with one invitation. The explanation summarizes Jev’s relevance rubric; it does not invent facts about a person. Shared interests and related work are separate estimated probabilities. “Tentative” means the evidence is uncertain. These signals don’t establish identity or predict a reply.</p>
-      <p>Scans run through Cloudflare and TypeSafe, with requests and results logged in our Cloudflare gateway. Production results may be reused for the configured cache lifetime when inputs are unchanged; local scans stay fresh. Signing in again refreshes your bio.</p>
-      <p>Your identity, bio, optional context, choices and opened history are stored for your account. First-party measurement records your first Keep, first opening, active UTC days and optional feedback. Your linked X profile can show an “On hashtagconnect” badge, showing that you’re also here to connect. Your Stash is private. Only our own links record an opening; clicks inside X’s widgets don’t.</p>
+      <p>Relevance compares your X bio, saved project and any optional context with one invitation. The explanation summarizes Jev’s relevance rubric; it does not invent facts about a person. Shared interests and related work are separate estimated probabilities. “Tentative” means the evidence is uncertain. These signals don’t establish identity or predict a reply.</p>
+      <p>Scans run through Cloudflare and TypeSafe, with requests and results logged in our Cloudflare gateway. Production results may be reused for the configured cache lifetime when inputs are unchanged; local scans stay fresh. Project pages are read by Cloudflare Browser Run; Gemini drafts the project description through the same logged gateway. The full page is not stored in our database. Signing in again refreshes your bio.</p>
+      <p>Your identity, bio, saved project description and source link, optional context, choices and opened history are stored for your account. First-party measurement records your first Keep, first opening, active UTC days and optional feedback. Your linked X profile can show an “On hashtagconnect” badge, showing that you’re also here to connect. Your Stash is private. Only our own links record an opening; clicks inside X’s widgets don’t.</p>
       <p>X receives your IP address and browsing data when embeds load and may set cookies. <a href="https://x.com/en/privacy" target="_blank" rel="noreferrer">X privacy policy ↗</a></p>
     </details>
     <label className="switch"><input type="checkbox" checked={embeds} onChange={(e) => onConsent(e.target.checked)} /><span aria-hidden="true" />Show official X embeds</label>

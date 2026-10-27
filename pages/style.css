@@ -521,3 +521,23 @@ a.person-open:hover { background: var(--sunk); }
   .scan-score span { font-size: 13px; }
   .scan-rating-copy p { font-size: 14px; }
 }
+
+/* Private project context: one link, then a review in the existing settings sheet. */
+.project-editor { margin: 28px 0 20px; }
+.project-heading { display: flex; align-items: baseline; gap: 12px; justify-content: space-between; }
+.project-heading h3 { font: 800 24px/1.05 var(--display); letter-spacing: -0.035em; margin: 0 0 10px; }
+.project-heading > span { flex-shrink: 0; }
+.project-link-row { display: flex; gap: 8px; }
+.project-link-row input { flex: 1; }
+.project-link-row .btn { flex-shrink: 0; white-space: nowrap; }
+.project-suggestions, .project-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.project-suggestions .link { overflow-wrap: anywhere; text-align: left; }
+.project-progress { margin-top: 12px; }
+.project-draft { padding-top: 12px; }
+.project-draft textarea { field-sizing: content; min-height: 120px; }
+.project-excerpt { color: var(--muted); font-size: 13px; }
+.project-excerpt blockquote { margin: 10px 0; padding-left: 12px; border-left: 2px solid var(--line); }
+@media (max-width: 380px) {
+  .project-link-row { flex-direction: column; }
+  .project-link-row .btn { align-self: flex-start; }
+}

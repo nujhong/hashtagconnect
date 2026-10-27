@@ -1,3 +1,4 @@
+import type { ProjectProfile } from "../src/project-profile";
 import type { ScanResult } from "../src/scan-contract";
 import { index, integer, primaryKey, sqliteTable, text } from "void/schema-d1";
 
@@ -44,6 +45,7 @@ export const scanUsage = sqliteTable("scan_usage", {
 export const viewerContext = sqliteTable("viewer_context", {
   userId: text("user_id").primaryKey(),
   sentence: text("sentence").notNull(),
+  project: text("project", { mode: "json" }).$type<ProjectProfile>(),
 });
 
 /** First-party milestones, not a log of profiles viewed or confirmed connections. */

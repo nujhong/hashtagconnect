@@ -9,6 +9,8 @@ export default defineConfig({
   },
   cloudflare: {
     name: "xconnect",
+    account_id: "21f45a2a8793aab5564e155efbee03fb",
+    browser: { binding: "BROWSER", remote: true },
     observability: { enabled: true, traces: { enabled: true } },
   },
   head: {
