@@ -39,7 +39,11 @@ export default defineConfig({
       { property: "og:image", content: "https://hashtagconnect.kinetics.workers.dev/og.png" },
       { property: "og:image:width", content: "1200" },
       { property: "og:image:height", content: "630" },
-      { property: "og:image:alt", content: "hashtagconnect: Find your first circle on X." },
+      {
+        property: "og:image:alt",
+        content:
+          "hashtagconnect: Find your first circle on X. A #connect post with “AI tools” highlighted, linked to “I build AI tools” from your profile.",
+      },
       { name: "twitter:card", content: "summary_large_image" },
     ],
     link: [
