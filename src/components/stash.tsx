@@ -16,7 +16,7 @@ export type StashEntry = { key: string; person: Person | null; choice: Choice | 
 const shortId = (id: string) => `…${id.slice(-6)}`;
 
 type RowActions = {
-  tags: Tags; embeds: boolean; busy: boolean; focusId: string | null; onEnable: () => void;
+  tags: Tags; busy: boolean; focusId: string | null;
   onOpen: (t: { post?: Post; person?: Person }) => void; onView: (p: Post) => void;
   onMove: (entry: StashEntry, choice: Choice | null) => void;
 };
@@ -95,7 +95,7 @@ export function Stash({ dialogRef, open, onClose, browserOnly, lists, list, onLi
  * recorded as opened); View post returns to the main view for the original invitation. A post whose
  * author isn't linked yet shows that post instead, since it's the only honest way to see who it is. Secondary actions live behind "More" so the list stays a list of people.
  */
-function PersonRow({ entry, tags, embeds, busy, focusId, onEnable, onOpen, onView, onMove }: { entry: StashEntry } & RowActions) {
+function PersonRow({ entry, tags, busy, focusId, onOpen, onView, onMove }: { entry: StashEntry } & RowActions) {
   const { person, source } = entry;
   const [more, setMore] = useState(false);
   const topics = source ? tags[source.id] ?? [] : [];
@@ -128,7 +128,7 @@ function PersonRow({ entry, tags, embeds, busy, focusId, onEnable, onOpen, onVie
     </div>}
     {person && !source && more && <p className="person-note">The post you found them through has left the pool.</p>}
     {!person && source && <div className="person-posts">
-      <PostFrame id={source.id} embeds={embeds} onEnable={onEnable} fallback={<OpenLink post={source} onOpen={(p) => onOpen({ post: p })} className="btn sm" />} />
+      <PostFrame id={source.id} fallback={<OpenLink post={source} onOpen={(p) => onOpen({ post: p })} className="btn sm" />} />
     </div>}
   </div>;
 }

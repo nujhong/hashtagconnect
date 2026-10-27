@@ -2,7 +2,6 @@ import { mergeSeeds, postFromUrl, type Person, type Post } from "./people";
 
 /** Browser-only sandbox storage for signed-out visitors and the auth preview. Keys keep their original names. */
 export const previewKey = "xconnect-preview-v3";
-export const embedConsentKey = "xconnect-x-embeds";
 export const lettersKey = "hashtagconnect-letter-shortcuts";
 
 export type Tags = Record<string, string[]>;

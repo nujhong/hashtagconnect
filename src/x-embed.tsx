@@ -29,18 +29,18 @@ function loadWidgets(): Promise<Widgets> {
   return widgetScript;
 }
 
-export type EmbedStatus = "off" | "loading" | "ready" | "unavailable";
+export type EmbedStatus = "loading" | "ready" | "unavailable";
 
-export function XEmbed({ id, enabled, onEnable, onStatusChange }: {
+export function XEmbed({ id, onStatusChange }: {
   id: string;
-  enabled: boolean; onEnable: () => void; onStatusChange?: (status: EmbedStatus) => void;
+  onStatusChange?: (status: EmbedStatus) => void;
 }) {
   const host = useRef<HTMLDivElement>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "unavailable">("loading");
   const [attempt, setAttempt] = useState(0);
-  useEffect(() => { onStatusChange?.(enabled ? status : "off"); }, [enabled, status, onStatusChange]);
+  useEffect(() => { onStatusChange?.(status); }, [status, onStatusChange]);
   useEffect(() => {
-    if (!enabled || !host.current) return;
+    if (!host.current) return;
     const mount = document.createElement("div");
     host.current.appendChild(mount);
     let cancelled = false;
@@ -57,16 +57,10 @@ export function XEmbed({ id, enabled, onEnable, onStatusChange }: {
       if (!cancelled) { window.clearTimeout(timeout); setStatus(element ? "ready" : "unavailable"); }
     }).catch(unavailable);
     return () => { cancelled = true; window.clearTimeout(timeout); mount.remove(); };
-  }, [id, enabled, attempt]);
+  }, [id, attempt]);
 
   return <div className="embed-shell">
-    {!enabled ? <div className="embed-placeholder">
-      <span className="embed-symbol" aria-hidden="true">𝕏</span>
-      <h3>Read it in their words.</h3>
-      <p>X loads this content and may set cookies.</p>
-      <button className="btn primary sm" onClick={onEnable}>Show X embeds</button>
-      <a href="https://x.com/en/privacy" target="_blank" rel="noreferrer">X privacy policy ↗</a>
-    </div> : status !== "ready" && <div className={`embed-placeholder ${status}`} role="status">
+    {status !== "ready" && <div className={`embed-placeholder ${status}`} role="status">
       <span className="embed-symbol" aria-hidden="true">𝕏</span>
       <h3>{status === "loading" ? "Loading invitation…" : "X couldn’t load this post."}</h3>
       {status === "unavailable" && <button className="link" onClick={() => setAttempt((n) => n + 1)}>Try again</button>}

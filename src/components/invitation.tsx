@@ -3,10 +3,10 @@ import { PostFrame } from "./post-frame";
 import { OpenLink } from "./ui";
 
 /** The original invitation stays visible below its scan, with a fallback link if X cannot render it. */
-export function Invitation({ post, embeds, onEnable, onOpen }: {
-  post: Post; embeds: boolean; onEnable: () => void; onOpen: (target: { post?: Post; person?: Person }) => void;
+export function Invitation({ post, onOpen }: {
+  post: Post; onOpen: (target: { post?: Post; person?: Person }) => void;
 }) {
-  return <PostFrame id={post.id} embeds={embeds} onEnable={onEnable}
+  return <PostFrame id={post.id}
     header={<>
       {post.person && <strong>@{post.person.handle}</strong>}
       {post.person?.onPlatform && <span className="member-badge" title="Also here to connect">On hashtagconnect</span>}

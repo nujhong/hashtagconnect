@@ -4,11 +4,11 @@ import type { ProjectProfile } from "../project-profile";
 import { BioContext } from "./community";
 import { Keycap, Modal } from "./ui";
 
-/** Settings & privacy: what's stored, the scan's data path, embed consent, letter shortcuts, and clearing your data. */
-export function Settings({ context, embeds, letters, busy, onConsent, onLetters, onClear, onClose }: {
+/** Settings & privacy: what's stored, the scan's data path, embed privacy, letter shortcuts, and clearing your data. */
+export function Settings({ context, letters, busy, onLetters, onClear, onClose }: {
   context?: { bio: string | null; sentence: string; project: ProjectProfile | null };
-  embeds: boolean; letters: boolean; busy: boolean;
-  onConsent: (v: boolean) => void; onLetters: (v: boolean) => void; onClear: () => void; onClose: () => void;
+  letters: boolean; busy: boolean;
+  onLetters: (v: boolean) => void; onClear: () => void; onClose: () => void;
 }) {
   const [clearing, setClearing] = useState(false);
   return <Modal label="Settings and privacy" onClose={onClose}>
@@ -21,7 +21,6 @@ export function Settings({ context, embeds, letters, busy, onConsent, onLetters,
       <p>Your identity, bio, saved project description and source link, optional context, choices and opened history are stored for your account. First-party measurement records your first Keep, first opening, active UTC days and optional feedback. Your linked X profile can show an “On hashtagconnect” badge, showing that you’re also here to connect. Your Stash is private. Only our own links record an opening; clicks inside X’s widgets don’t.</p>
       <p>X receives your IP address and browsing data when embeds load and may set cookies. <a href="https://x.com/en/privacy" target="_blank" rel="noreferrer">X privacy policy ↗</a></p>
     </details>
-    <label className="switch"><input type="checkbox" checked={embeds} onChange={(e) => onConsent(e.target.checked)} /><span aria-hidden="true" />Show official X embeds</label>
     <hr />
     <label className="switch"><input type="checkbox" checked={letters} onChange={(e) => onLetters(e.target.checked)} /><span aria-hidden="true" />Letter shortcuts</label>
     <p className="fine shortcuts"><Keycap k="S" /> opens Stash. <Keycap k="←" /> Pass, <Keycap k="→" /> Keep. <Keycap k="Esc" /> closes overlays. Shortcuts pause while typing or using a dialog.</p>

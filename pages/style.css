@@ -140,7 +140,7 @@ code { font: 12px var(--mono); padding: 1px 5px; border-radius: 5px; background:
 .post-frame-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; color: var(--ink); }
 .post-frame-head strong { font: 800 18px/1.2 var(--display); overflow-wrap: anywhere; }
 .member-badge { padding: 4px 7px; border: 1px solid var(--line); border-radius: 6px; color: var(--muted); font-size: 11px; line-height: 1.2; }
-/* Loading, error and consent states sit directly on the container rather than as a second card. */
+/* Loading and error states sit directly on the container rather than as a second card. */
 .post-frame .embed-placeholder { background: none; border: none; }
 .person .post-frame { min-height: 260px; padding: 12px; border-radius: 18px; }
 .embed-shell { position: relative; min-height: 240px; }

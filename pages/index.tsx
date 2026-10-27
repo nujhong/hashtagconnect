@@ -3,7 +3,7 @@ import { AnimatePresence, MotionConfig, motion, useReducedMotion } from "motion/
 import { auth, fetch as api, FetchError } from "void/client";
 import type { Props } from "./index.server";
 import { dedupePeople, postFromUrl, timeAgo, type Choice, type Discovery, type Person, type PersonEntry, type Post } from "../src/people";
-import { embedConsentKey, lettersKey, previewKey, restorePreview, type Tags } from "../src/sandbox";
+import { lettersKey, previewKey, restorePreview, type Tags } from "../src/sandbox";
 import { SignInSheet, beginXSignIn, readAuthReturn, type Account, type AuthStep } from "../src/components/auth";
 import { ConnectionFeedback } from "../src/components/community";
 import { DiscoveryFilters } from "../src/components/discovery-filters";
@@ -40,7 +40,6 @@ function App(props: Props) {
   const [seeded, setSeeded] = useState<string[]>([]);
   const [filter, setFilter] = useState<string[]>([]);
   const [ready, setReady] = useState(false);
-  const [embeds, setEmbeds] = useState(false);
   const [pending, setPending] = useState(false);
   const [notice, setNotice] = useState<Notice | null>(null);
   const [focusId, setFocusId] = useState<string | null>(null);
@@ -91,7 +90,6 @@ function App(props: Props) {
 
   useEffect(() => {
     if (preview) { const restored = restorePreview(); setPosts(restored.posts); setTags(restored.tags); setSeeded(restored.seeded); }
-    try { setEmbeds(localStorage.getItem(embedConsentKey) === "yes"); } catch { /* Consent remains off when storage is blocked. */ }
     try { setLetters(localStorage.getItem(lettersKey) !== "off"); } catch { /* Letter shortcuts stay on for this visit. */ }
     setReady(true);
     if (props.user) void api("/api/activity", { method: "POST", body: { event: "visit" } }).catch(() => { /* Measurement must not block browsing. */ });
@@ -144,10 +142,6 @@ function App(props: Props) {
   function patchLocal(target: { post?: Post; person?: Person }, changes: Partial<Post>) {
     const pid = target.person?.id ?? target.post?.person?.id;
     setPosts((rows) => rows.map((r) => (pid ? r.person?.id === pid : r.id === target.post?.id) ? { ...r, ...changes } : r));
-  }
-  function setConsent(value: boolean) {
-    setEmbeds(value);
-    try { localStorage.setItem(embedConsentKey, value ? "yes" : "no"); } catch { /* This visit still respects the choice. */ }
   }
   function errorMessage(error: unknown) {
     if (error instanceof FetchError && typeof error.data === "string") return error.data;
@@ -298,7 +292,7 @@ function App(props: Props) {
                     exit="leave" variants={{ leave: (c: Choice | null) => c === "save"
                       ? { opacity: 0, y: -28, scale: 0.97, transition: { duration: 0.22 } }
                       : c === "skip" ? { opacity: 0, x: -48, transition: { duration: 0.22 } } : { opacity: 0, transition: { duration: 0.15 } } }}>
-                    <Invitation post={current} embeds={embeds} onEnable={() => setConsent(true)} onOpen={markOpened} />
+                    <Invitation post={current} onOpen={markOpened} />
                   </motion.div>
                 : <motion.div key="empty" className="empty" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
                     <h2>{filter.length ? "No one under these tags." : "Nothing left in your queue."}</h2>
@@ -334,8 +328,7 @@ function App(props: Props) {
       </div>
 
       <Stash dialogRef={shelfRef} open={shelf} onClose={() => setShelf(false)} browserOnly={preview && !account}
-        lists={lists} list={list} onList={setList} focusId={focusId} tags={tags} embeds={embeds} busy={pending}
-        onEnable={() => setConsent(true)}
+        lists={lists} list={list} onList={setList} focusId={focusId} tags={tags} busy={pending}
         unopenedCount={unopened.length} onOpenAll={openStash}
         onOpen={markOpened} onView={show} onMove={moveEntry} onAdd={add} />
     </div>
@@ -358,7 +351,7 @@ function App(props: Props) {
       onStep={(step, code) => setAuthStep({ step, code })} onClose={() => setAuthStep(null)}
       onPreviewReturn={() => { setAuthStep(null); setPreviewAccount(true); say("Preview sign-in. No real session was created."); }} />}
 
-    {modal === "privacy" && <Settings context={props.user ? { bio: props.bio, sentence: props.context, project: props.project } : undefined} embeds={embeds} letters={letters} busy={pending}
-      onConsent={setConsent} onLetters={setLetterShortcuts} onClear={clearMine} onClose={() => setModal(null)} />}
+    {modal === "privacy" && <Settings context={props.user ? { bio: props.bio, sentence: props.context, project: props.project } : undefined} letters={letters} busy={pending}
+      onLetters={setLetterShortcuts} onClear={clearMine} onClose={() => setModal(null)} />}
   </div>;
 }
