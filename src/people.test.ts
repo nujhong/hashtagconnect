@@ -71,3 +71,15 @@ test("people deduplicate by local identity while unconfirmed post links remain d
     2,
   );
 });
+
+test("a pin leads the eligible deck without duplicating its author or restoring an excluded post", () => {
+  const person = { id: "maker", ...profileFromInput("@nujhongc")! };
+  const newer = { ...postFromUrl("https://x.com/nujhongc/status/30")!, person };
+  const other = postFromUrl("https://x.com/other/status/20")!;
+  const pinned = { ...postFromUrl("https://x.com/nujhongc/status/10")!, person };
+  const input = [newer, other, pinned];
+  assert.deepEqual(dedupePeople(input, pinned.id), [pinned, other]);
+  assert.deepEqual(input, [newer, other, pinned], "Ordering does not mutate stored posts");
+  assert.deepEqual(dedupePeople([newer, other], pinned.id), [newer, other]);
+  assert.deepEqual(dedupePeople([], pinned.id), []);
+});

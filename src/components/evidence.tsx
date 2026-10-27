@@ -12,25 +12,48 @@ const sources = { bio: "Your bio", context: "Your context", project: "Your proje
  * The slot is never left blank once a scan is involved: placeholders while scanning, and an honest "nothing stood
  * out" card (with a way to give scans more to work with) when Jev found no phrase strong enough.
  */
-export function EvidenceCards({ evidence, spots, scanning, scored, onProfile }: {
-  evidence: Evidence[]; spots: Spot[] | null; scanning: boolean; scored: boolean; onProfile: () => void;
+export function EvidenceCards({
+  evidence,
+  spots,
+  scanning,
+  scored,
+  onProfile,
+}: {
+  evidence: Evidence[];
+  spots: Spot[] | null;
+  scanning: boolean;
+  scored: boolean;
+  onProfile: () => void;
 }) {
-  if (scanning) return (
-    <section className="evidence is-pending" aria-hidden="true">
-      <p className="evidence-label">From your profile</p>
-      <ul>{[0, 1].map((i) => <li key={i} className="ev"><span className="ghost short" /><span className="ghost" /></li>)}</ul>
-    </section>
-  );
-  if (!evidence.length && scored) return (
-    <section className="evidence" aria-label="From your profile">
-      <p className="evidence-label">From your profile</p>
-      <div className="ev ev-empty">
-        <b>Nothing from your profile stood out here.</b>
-        <small>The score reads the whole post. More about what you do gives scans more to find.</small>
-        <button className="link" onClick={onProfile}>Edit your profile</button>
-      </div>
-    </section>
-  );
+  if (scanning)
+    return (
+      <section className="evidence is-pending" aria-hidden="true">
+        <p className="evidence-label">From your profile</p>
+        <ul>
+          {[0, 1].map((i) => (
+            <li key={i} className="ev">
+              <span className="ghost short" />
+              <span className="ghost" />
+            </li>
+          ))}
+        </ul>
+      </section>
+    );
+  if (!evidence.length && scored)
+    return (
+      <section className="evidence" aria-label="From your profile">
+        <p className="evidence-label">From your profile</p>
+        <div className="ev ev-empty">
+          <b>Nothing from your profile stood out here.</b>
+          <small>
+            The score reads the whole post. More about what you do gives scans more to find.
+          </small>
+          <button className="link" onClick={onProfile}>
+            Edit your profile
+          </button>
+        </div>
+      </section>
+    );
   if (!evidence.length) return null;
   return (
     <section className="evidence" aria-label="From your profile">

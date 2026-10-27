@@ -56,10 +56,13 @@ export function personKey(post: Post): string {
   return post.person ? `person:${post.person.id}` : `post:${post.id}`;
 }
 
-/** Keep the newest visible introduction for each person; unlinked posts remain distinct. */
-export function dedupePeople(posts: Post[]): Post[] {
+/** Keep the newest visible introduction for each person, preferring the pinned post when present; unlinked posts remain distinct. */
+export function dedupePeople(posts: Post[], pinnedPostId?: string): Post[] {
   const seen = new Set<string>();
-  return posts.filter((post) => {
+  const ordered = pinnedPostId
+    ? [...posts].sort((a, b) => Number(b.id === pinnedPostId) - Number(a.id === pinnedPostId))
+    : posts;
+  return ordered.filter((post) => {
     const key = personKey(post);
     if (seen.has(key)) return false;
     seen.add(key);
