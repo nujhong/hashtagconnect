@@ -8,3 +8,8 @@ dist
 !.env.example
 *.tsbuildinfo
 .DS_Store
+.claude/
+/fixtures/
+/outputs/
+/public/design-options.html
+*.log

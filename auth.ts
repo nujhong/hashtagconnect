@@ -1,9 +1,19 @@
 import { defineAuth } from "void/auth";
+import { db } from "void/db";
+import { queues } from "void/queues";
+import { enqueueBioProject } from "./src/server/project-from-bio.ts";
+import { bioProjectAfterOAuth } from "./src/server/oauth-profile.ts";
 import { getXUserInfo } from "./src/server/x-oauth.ts";
 
 export default defineAuth(({ defaults, env }) => ({
   ...defaults,
   appName: "hashtagconnect",
+  hooks: {
+    ...defaults.hooks,
+    after: bioProjectAfterOAuth((userId, bio) =>
+      enqueueBioProject(db, userId, bio, (message) => queues["profile-import"].send(message)),
+    ),
+  },
   emailAndPassword: { enabled: false },
   // Better Auth applies input filtering to provider profiles too; profile edits are disabled instead.
   disabledPaths: [...(defaults.disabledPaths ?? []), "/update-user"],
@@ -19,11 +29,14 @@ export default defineAuth(({ defaults, env }) => ({
   },
   account: { ...defaults.account, encryptOAuthTokens: true },
   socialProviders:
-    env.AUTH_TWITTER_CLIENT_ID && env.AUTH_TWITTER_CLIENT_SECRET
+    typeof env.X_CLIENT_ID === "string" &&
+    typeof env.X_CLIENT_SECRET === "string" &&
+    env.X_CLIENT_ID &&
+    env.X_CLIENT_SECRET
       ? {
           twitter: {
-            clientId: String(env.AUTH_TWITTER_CLIENT_ID),
-            clientSecret: String(env.AUTH_TWITTER_CLIENT_SECRET),
+            clientId: env.X_CLIENT_ID,
+            clientSecret: env.X_CLIENT_SECRET,
             disableDefaultScope: true,
             scope: ["tweet.read", "users.read"],
             getUserInfo: getXUserInfo,

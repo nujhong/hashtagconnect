@@ -15,5 +15,8 @@ export function scheduleScan(
     const result = await request(postId, controller.signal);
     if (!controller.signal.aborted) onResult(result);
   }, 250);
-  return () => { clearTimeout(timer); controller.abort(); };
+  return () => {
+    clearTimeout(timer);
+    controller.abort();
+  };
 }

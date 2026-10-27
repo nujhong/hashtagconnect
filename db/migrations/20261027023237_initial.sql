@@ -55,20 +55,15 @@ CREATE TABLE `scan_cache` (
 	`post_id` text NOT NULL,
 	`input_hash` text NOT NULL,
 	`result` text NOT NULL,
-	`expires_at` integer NOT NULL,
 	PRIMARY KEY(`user_id`, `post_id`),
 	FOREIGN KEY (`post_id`) REFERENCES `posts`(`id`) ON UPDATE no action ON DELETE cascade
-);
---> statement-breakpoint
-CREATE TABLE `scan_usage` (
-	`day` text PRIMARY KEY NOT NULL,
-	`attempts` integer NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE `viewer_context` (
 	`user_id` text PRIMARY KEY NOT NULL,
 	`sentence` text NOT NULL,
-	`project` text
+	`project` text,
+	`project_import` text
 );
 --> statement-breakpoint
 CREATE TABLE `account` (

@@ -9,10 +9,20 @@
     "skipLibCheck": true,
     "allowImportingTsExtensions": true,
     "types": ["void/env", "vite/client"],
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "paths": {
+      "void/db": ["./.void/db.d.ts"],
+      "@schema": ["./db/schema.ts"],
+      "@schema/*": ["./db/schema/*"],
+      "void/routes": ["./.void/routes.d.ts"],
+      "void/queues": ["./.void/queues.d.ts"],
+      "~/*": ["./*"]
+    },
+    "noEmit": true
   },
   "include": [
     "src",
+    "tests",
     "pages",
     "routes",
     "middleware",
