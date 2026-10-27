@@ -1,6 +1,6 @@
 # Jev Box proof — 27 October 2026
 
-Two real requests through the existing Cloudflare momentium gateway used `typesafe/jev-1.14.0`, each containing the post screenshot and four questions: presence and bounding box for each of two example profiles. The app UI and production scan are unchanged.
+Two real requests through the existing Cloudflare momentium gateway used `typesafe/jev-1.14.0`, each containing the post screenshot and four questions: presence and bounding box for each of two example profiles. These are historical isolated experiments; the integrated scan now adds candidates to its normal output.
 
 Public source post: https://x.com/Qazeem48515/status/2114541736676524485
 
@@ -22,27 +22,22 @@ Box still returns coordinates for the negative profile. A separate presence ques
 
 At the documented $0.042 per million input tokens, the model input cost was $0.00005754 and $0.000042126 respectively. Output was 74 tokens each, priced free. Browser capture costs are separate. These requests include two example profiles, not a full production scan benchmark.
 
-## Run the preserved flow
+## Integrated flow
 
-From the repository root, with the existing Cloudflare variables in `.env` or the environment:
+The implementation now lives in the normal scan path: `capturePostImage` uses the existing Browser Run binding, `jevInput` includes the screenshot and Box/presence questions beside the existing scores and Choice explanation, and `scanFromAnswers` returns `boxes` plus `boxImage` metadata. There is no standalone proof command and no overlay UI.
 
-```sh
-npm run proof:jev -- fixtures/jev/post-550.jpg "I build AI tools."
-npm run proof:jev -- fixtures/jev/post-320.jpg "I make ceramic bowls and teach wheel throwing."
-```
+These files preserve the original two-profile experiments: [wide response](result-550.json), [narrow response](result-320.json), [wide screenshot](post-550.jpg), [narrow screenshot](post-320.jpg). The old [single-profile response](cli-result-550.json) remains evidence from the experiment, not the current API response shape.
 
-Each invocation sends one screenshot and one profile to the configured gateway, with Noul presence and Box questions in the same request, and prints the native result JSON. Gateway logging is enabled, caching disabled. Running it incurs inference usage; it does not take screenshots or call X. Capture the actual rendered post separately. Image sides must be within Jev's documented 280–1568 range.
-
-The saved results tested both profiles in a single request. The reusable script tests one supplied profile at a time and includes an explicit instruction to treat source content as evidence. It does not invent pixel precision or hide low-presence boxes in the raw output. The native app scan still lives in `src/server/jev.ts` and continues to use bio/project + oEmbed text.
-
-Raw responses: [wide](result-550.json) and [narrow](result-320.json). Source screenshots: [wide](post-550.jpg) and [narrow](post-320.jpg). The result files also retain the original browser geometry; box coordinates are relative to the isolated screenshot, not the full browser viewport.
-
-`npm test` checks the saved fixture and request flow without network calls or credentials.
+Run `npm test` for offline tests of the integrated request, response validation, capture and fallback behavior.
 
 References:
 - https://developers.cloudflare.com/ai/models/typesafe/jev-1.14.0/
 - https://docs.typesafe.ai/primitives/box
 
-No automatic screenshot pipeline or product overlay was integrated. Further overlay work would need coordinates corresponding to the exact displayed render.
+The normal scan now captures the official widget server-side. Further overlay work still needs coordinates corresponding to the exact displayed render.
 
 The preserved single-profile CLI was also verified live on 27 October 2026: [response](cli-result-550.json), presence 0.96, box confidence 0.98, 1,225 input tokens and 36 free output tokens. This confirms the reusable command runs through the configured gateway; it does not establish general localization accuracy.
+
+## Live integrated check
+
+The ordinary evaluator was tested with a fresh Browser Run capture and live oEmbed evidence on 27 October 2026: [scan response](integrated-scan.json), [captured post](integrated-post.png). One Jev request returned the existing score, Choice explanation and supporting signals together with two native candidate boxes. The combined request gave low localization confidence (0.36 and 0.21), and the coordinates missed the precise AI Tools line. This verifies the output plumbing, not reliable highlighting. The API retains these confidence/presence values rather than silently converting candidates into confident highlights.

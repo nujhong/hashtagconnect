@@ -78,7 +78,7 @@ test("Jev receives only the OAuth bio and oEmbed markup through the native Cloud
     assert.equal(headers.get("cf-aig-collect-log"), "true");
     assert.equal(headers.get("cf-aig-skip-cache"), "true");
     const body = JSON.parse(String(init?.body));
-    assert.equal(body.model, "typesafe/jev");
+    assert.equal(body.model, "typesafe/jev-1.14.0");
     assert.deepEqual(body.input.state, { viewer_bio: evidence.viewer.bio, connect_post_html: evidence.post.html });
     assert.equal(body.input.questions.relevance.type, "score");
     assert.equal(body.input.questions.relevance.criteria.length, 4);

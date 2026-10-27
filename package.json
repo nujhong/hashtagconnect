@@ -7,9 +7,8 @@
     "build": "vp build",
     "preview": "vp preview",
     "check": "void prepare && tsc --noEmit",
-    "test": "node --test src/*.test.ts scripts/*.test.mjs",
-    "postinstall": "void prepare",
-    "proof:jev": "node scripts/jev-box.mjs"
+    "test": "node --test src/*.test.ts",
+    "postinstall": "void prepare"
   },
   "dependencies": {
     "@better-auth/core": "1.7.12",

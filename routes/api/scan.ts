@@ -5,6 +5,7 @@ import { env } from "void/env";
 import { scanUsage, scanCache, viewerContext } from "@schema";
 import { z } from "zod";
 import { requirePostAccess } from "../../src/server/discovery";
+import { capturePostImage } from "../../src/server/post-image";
 import { evaluateProfiles } from "../../src/server/jev";
 import { loadPublicEvidence, XEvidenceError } from "../../src/server/x-evidence";
 import type { ScanResult } from "../../src/scan-contract";
@@ -46,6 +47,9 @@ export const POST = defineHandler.withValidator({ body: z.object({ postId: z.str
       setWhere: setup.dailyLimit === null ? undefined : sql`${scanUsage.attempts} < ${setup.dailyLimit}`,
     }).returning({ attempts: scanUsage.attempts });
     if (!reserved.length) return { status: "unavailable", reason: "Today’s scan allowance is used up. Try again tomorrow.", pauseAuto: true };
+    // Reserve before Browser Run too: exhausted allowances must not trigger screenshot charges.
+    try { evidence.post.image = await capturePostImage(c.env.BROWSER, body.postId); }
+    catch { console.warn("scan.post_image_unavailable", { postId: body.postId }); }
     const result = await evaluateProfiles(setup.jev, evidence);
     if (setup.cacheTtlSeconds && (result.status === "ok" || result.status === "not_enough_data")) {
       const values = { inputHash, result, expiresAt: Date.now() + setup.cacheTtlSeconds * 1000 };

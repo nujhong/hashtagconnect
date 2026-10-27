@@ -48,7 +48,7 @@ test("one Jev request returns the Choice explanation and independent scores", as
     const result = await evaluateProfiles(config, evidence, async (_url, init) => {
       calls++;
       const body = JSON.parse(String(init?.body));
-      assert.equal(body.model, "typesafe/jev");
+      assert.equal(body.model, "typesafe/jev-1.14.0");
       assert.equal(body.input.questions.explanation.type, "choice");
       assert.deepEqual(Object.keys(body.input.questions.explanation.criteria), Object.keys(expected));
       return Response.json({ success: true, result: { state: "Completed", result: { model: "jev", answers: {

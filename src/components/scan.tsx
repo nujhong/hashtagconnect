@@ -25,6 +25,7 @@ const spring = { type: "spring", stiffness: 420, damping: 34 } as const;
 const DEMO: ScanResult = {
   status: "ok",
   model: "demo",
+  boxes: [], boxImage: null,
   checkedAt: new Date(0).toISOString(),
   relevance: 78,
   reason: "You share a specific interest.",
