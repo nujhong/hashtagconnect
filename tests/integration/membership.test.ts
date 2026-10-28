@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { DatabaseSync } from "node:sqlite";
 import { sql } from "void/db";
 import { SQLiteSyncDialect } from "void/schema-d1";
-import { platformMembership } from "~/src/server/membership.ts";
+import { platformMembership } from "~/server/membership.ts";
 
 test("membership requires the last OAuth handle and matching linked X identity", () => {
   const db = new DatabaseSync(":memory:");

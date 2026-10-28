@@ -2,8 +2,9 @@ import { people, personStates, posts, postStates } from "@schema";
 import { and, db, desc, eq, isNotNull, or, sql } from "void/db";
 import { HTTPException } from "hono/http-exception";
 import { z } from "zod";
-import type { Discovery } from "~/src/people";
+import type { Discovery } from "~/shared/people";
 import { platformMembership } from "./membership";
+import { applyDiscoveryRetention } from "~/shared/discovery-retention";
 
 const personFields = { id: people.id, handle: people.handle, profileUrl: people.profileUrl };
 export const stateTarget = z.union([
@@ -24,7 +25,7 @@ export async function listPosts(userId?: string): Promise<Discovery> {
       .leftJoin(people, eq(posts.personId, people.id))
       .where(isNotNull(posts.pooledAt))
       .orderBy(desc(posts.pooledAt), desc(posts.addedAt));
-    return {
+    return applyDiscoveryRetention({
       posts: rows.map(({ post, person, onPlatform }) => ({
         ...post,
         person: person ? { ...person, onPlatform } : null,
@@ -32,7 +33,7 @@ export async function listPosts(userId?: string): Promise<Discovery> {
         openedAt: null,
       })),
       people: [],
-    };
+    });
   }
   const rows = await db
     .select({
@@ -67,7 +68,7 @@ export async function listPosts(userId?: string): Promise<Discovery> {
     .where(eq(personStates.userId, userId))
     .orderBy(desc(personStates.updatedAt));
   // shortcut: discovery loads the whole pool; paginate when it reaches a few hundred posts.
-  return {
+  return applyDiscoveryRetention({
     posts: rows.map(
       ({
         post,
@@ -98,7 +99,7 @@ export async function listPosts(userId?: string): Promise<Discovery> {
           : null,
       };
     }),
-  };
+  });
 }
 
 export async function requirePostAccess(userId: string, postId: string) {

@@ -5,7 +5,7 @@
     "workers_dev": true,
     "preview_urls": true,
     "routes": [],
-    "account_id": "21f45a2a8793aab5564e155efbee03fb",
+    "account_id": "ac6ec0b998d8eb9a92746d8dd276bdf0",
     "browser": {
       "binding": "BROWSER",
       "remote": true
@@ -21,7 +21,8 @@
     "name": "hashtagconnect",
     "workers_dev": true,
     "preview_urls": true,
-    "account_id": "21f45a2a8793aab5564e155efbee03fb",
+    "routes": [],
+    "account_id": "ac6ec0b998d8eb9a92746d8dd276bdf0",
     "browser": {
       "binding": "BROWSER",
       "remote": true
@@ -37,11 +38,10 @@
       {
         "binding": "DB",
         "database_name": "hashtagconnect-db",
-        "database_id": "a8cd998f-f740-481d-ad9f-cf5d7fa67972",
-        "migrations_dir": "./db/migrations"
+        "database_id": "7bd961c1-ef1b-4179-9259-ad3ae8cd67ff",
+        "migrations_dir": "./src/db/migrations"
       }
-    ],
-    "routes": []
+    ]
   },
-  "text": "{\n  \"name\": \"hashtagconnect\",\n  \"workers_dev\": true,\n  \"preview_urls\": true,\n  \"account_id\": \"21f45a2a8793aab5564e155efbee03fb\",\n  \"browser\": {\n    \"binding\": \"BROWSER\",\n    \"remote\": true\n  },\n  \"observability\": {\n    \"enabled\": true,\n    \"traces\": {\n      \"enabled\": true\n    }\n  },\n  \"compatibility_date\": \"2026-02-24\",\n  \"d1_databases\": [\n    {\n      \"binding\": \"DB\",\n      \"database_name\": \"hashtagconnect-db\",\n      \"database_id\": \"a8cd998f-f740-481d-ad9f-cf5d7fa67972\",\n      \"migrations_dir\": \"./db/migrations\"\n    }\n  ],\n  \"routes\": []\n}\n"
+  "text": "{\n  \"name\": \"hashtagconnect\",\n  \"workers_dev\": true,\n  \"preview_urls\": true,\n  \"routes\": [],\n  \"account_id\": \"ac6ec0b998d8eb9a92746d8dd276bdf0\",\n  \"browser\": {\n    \"binding\": \"BROWSER\",\n    \"remote\": true\n  },\n  \"observability\": {\n    \"enabled\": true,\n    \"traces\": {\n      \"enabled\": true\n    }\n  },\n  \"compatibility_date\": \"2026-02-24\",\n  \"d1_databases\": [\n    {\n      \"binding\": \"DB\",\n      \"database_name\": \"hashtagconnect-db\",\n      \"database_id\": \"7bd961c1-ef1b-4179-9259-ad3ae8cd67ff\",\n      \"migrations_dir\": \"./src/db/migrations\"\n    }\n  ]\n}\n"
 }

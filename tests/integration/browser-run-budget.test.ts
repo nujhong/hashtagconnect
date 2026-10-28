@@ -9,7 +9,7 @@ import {
   BROWSER_RUN_MONTHLY_LIMIT,
   BrowserRunBudgetError,
   reserveBrowserRun,
-} from "~/src/server/browser-run-budget.ts";
+} from "~/server/browser-run-budget.ts";
 
 test("shared Browser Run reservations enforce the month atomically and fail closed", async () => {
   const mf = new Miniflare(
@@ -21,7 +21,7 @@ test("shared Browser Run reservations enforce the month atomically and fail clos
   );
   try {
     const binding = await mf.getD1Database("DB");
-    const dir = new URL("../../db/migrations/", import.meta.url);
+    const dir = new URL("../../src/db/migrations/", import.meta.url);
     for (const file of readdirSync(dir)
       .filter((file) => file.endsWith(".sql"))
       .sort()) {

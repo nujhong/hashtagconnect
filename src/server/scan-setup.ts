@@ -1,12 +1,14 @@
-import type { ScanAvailability } from "~/src/scan-contract.ts";
-import type { JevConfig } from "./jev.ts";
+import type { ScanAvailability } from "~/shared/scan-contract.ts";
+import type { AiGatewayConfig } from "./clef.ts";
 
 type ScanEnvironment = {
   CLOUDFLARE_ACCOUNT_ID?: string;
   CLOUDFLARE_AI_GATEWAY_ID?: string;
   CLOUDFLARE_AI_GATEWAY_TOKEN?: string;
 };
-type ScanSetup = { status: "unavailable"; reason: string } | { status: "ready"; jev: JevConfig };
+type ScanSetup =
+  | { status: "unavailable"; reason: string }
+  | { status: "ready"; inference: AiGatewayConfig };
 
 /** The page and API use the same prerequisite check; no external requests. */
 export function scanSetup(env: ScanEnvironment): ScanSetup {
@@ -21,7 +23,7 @@ export function scanSetup(env: ScanEnvironment): ScanSetup {
       reason: "The profile analysis service hasn’t been connected yet.",
     };
   }
-  return { status: "ready", jev: { accountId, gatewayId, apiToken } };
+  return { status: "ready", inference: { accountId, gatewayId, apiToken } };
 }
 
 /** Only this public projection belongs in page props, never the ready server configuration. */

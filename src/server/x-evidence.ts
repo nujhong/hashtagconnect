@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { ScanEvidence } from "~/src/scan-contract.ts";
+import type { ScanEvidence } from "~/shared/scan-contract.ts";
 
 const id = z.string().regex(/^[1-9]\d{0,24}$/);
 const oembed = z.object({ html: z.string().trim().min(1).max(80_000), type: z.literal("rich") });

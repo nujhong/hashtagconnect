@@ -1,0 +1,2768 @@
+/*
+ * hashtagconnect, "Sticker Sheet" on paper and slab. The page is paper (bone, or near-black in dark mode)
+ * where real posts and their scan notes sit as content. The main controls (the panel, the phone action bar, Kept,
+ * sheets, menus, toasts) is one graphite control slab, the same in both themes. Hot magenta is the
+ * single loud colour and means Keep or "on"; highlighter lime belongs to the scan. Controls press in like keys:
+ * a hard shadow they sink into.
+ */
+:root {
+  --bg: #f4f3ef;
+  --panel: #e9e7e1;
+  --surface: #ffffff;
+  --sunk: #e6e4de;
+  --ink: #0b0b0d;
+  --muted: #5c5b62;
+  --faint: #67666d;
+  --line: #d9d7d0;
+  --keep: #ff2d87;
+  --keep-ink: #0b0b0d;
+  --hot-text: #c4005c;
+  --scan: #c6ff3d;
+  --scan-text: #4d6b00;
+  --scan-ink: #0b0b0d;
+  --focus: #6a4dff;
+  --edge: #0b0b0d;
+  --slab: #141416;
+  --hatch: rgb(11 11 13 / 0.05);
+  --signal: var(--keep);
+  --signal-tint: color-mix(in srgb, var(--keep) 16%, var(--surface));
+  --danger: #c4283d;
+  --shadow: 0 1px 0 rgb(11 11 13 / 0.04), 0 22px 48px -24px rgb(11 11 13 / 0.45);
+  --display: "Bricolage Grotesque", "Geist", system-ui, sans-serif;
+  --sans: "Geist", system-ui, sans-serif;
+  --mono: "Geist Mono", ui-monospace, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0b0b0c;
+    --panel: #1a1a1d;
+    --surface: #1c1c20;
+    --sunk: #26262b;
+    --ink: #f4f3ef;
+    --muted: #a9a8af;
+    --faint: #8d8c93;
+    --line: #2d2d32;
+    --hot-text: #ff4d9a;
+    --scan-text: #c6ff3d;
+    --focus: #b3a6ff;
+    --edge: #000;
+    --hatch: rgb(244 243 239 / 0.05);
+    --danger: #ff5c6c;
+    --shadow: 0 1px 0 rgb(255 255 255 / 0.03), 0 24px 50px -24px rgb(0 0 0 / 0.8);
+    color-scheme: dark;
+  }
+}
+/* The connected workspace and controls share a graphite surface in both themes.
+   On phones the panel hands its children to the workspace grid; decisions stay pinned. */
+.workspace,
+.panel,
+.decide,
+.modal,
+.shelf,
+.menu,
+.toast {
+  --ink: #f4f3ef;
+  --bg: #141416;
+  --panel: #1f1f23;
+  --surface: #232328;
+  --sunk: #2c2c31;
+  --muted: #a9a8af;
+  --faint: #8f8e95;
+  --line: #34343a;
+  --edge: #000;
+  --hot-text: #ff4d9a;
+  --focus: #b3a6ff;
+  --hatch: rgb(244 243 239 / 0.05);
+  --danger: #ff6b7a;
+  --signal-tint: color-mix(in srgb, var(--keep) 22%, #141416);
+  color-scheme: dark;
+}
+* {
+  box-sizing: border-box;
+}
+html {
+  -webkit-text-size-adjust: 100%;
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 15px/1.5 var(--sans);
+  -webkit-font-smoothing: antialiased;
+}
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+button,
+input {
+  font: inherit;
+  color: inherit;
+}
+button {
+  cursor: pointer;
+}
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+a {
+  color: inherit;
+}
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+  border-radius: 10px;
+}
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+.skip-link {
+  position: absolute;
+  left: 12px;
+  top: -48px;
+  z-index: 50;
+  padding: 8px 12px;
+  background: var(--ink);
+  color: var(--bg);
+  border-radius: 8px;
+}
+.skip-link:focus {
+  top: 12px;
+}
+.fine {
+  color: var(--muted);
+  font-size: 12.5px;
+}
+.count {
+  display: inline-flex;
+  overflow: hidden;
+  vertical-align: bottom;
+  font-variant-numeric: tabular-nums;
+}
+.count span {
+  display: inline-block;
+}
+code {
+  font: 12px var(--mono);
+  padding: 1px 5px;
+  border-radius: 5px;
+  background: var(--sunk);
+}
+
+/* Small buttons */
+.btn,
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 42px;
+  padding: 0 18px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--surface);
+  text-decoration: none;
+  font: 700 15px var(--display);
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  transition:
+    transform 0.12s,
+    box-shadow 0.12s,
+    background 0.15s;
+}
+.btn:active:not(:disabled) {
+  transform: translateY(2px);
+}
+.btn.sm,
+.btn-sm {
+  height: 34px;
+  padding: 0 13px;
+  font-size: 13.5px;
+}
+.btn.primary,
+.btn-primary {
+  background: var(--ink);
+  color: var(--bg);
+}
+.btn.quiet {
+  border-color: transparent;
+  background: none;
+  color: var(--muted);
+}
+.btn.block {
+  width: 100%;
+}
+.link,
+.link-btn {
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-size: inherit;
+  font-weight: 600;
+}
+.link:hover,
+.link-btn:hover {
+  color: var(--ink);
+}
+.danger {
+  color: var(--danger) !important;
+}
+
+/* Mark */
+/* Mark and wordmark: a "#" sticker, then "hashtag" light and "connect" bold. Phones drop "hashtag", leaving #connect. */
+.mark {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 2px solid var(--edge);
+  border-radius: 10px;
+  background: var(--keep);
+  color: var(--keep-ink);
+  font: 800 22px/1 var(--display);
+  box-shadow: 0 3px 0 var(--edge);
+  rotate: -6deg;
+  transition: rotate 0.2s;
+}
+.brand:hover .mark {
+  rotate: 0deg;
+}
+.brand-name {
+  display: inline-flex;
+  align-items: baseline;
+}
+.brand-pre {
+  font-weight: 500;
+  color: var(--muted);
+  letter-spacing: -0.03em;
+}
+
+/* Top bar */
+.top {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 64px;
+  padding: 0 max(20px, calc(50% - 600px));
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(14px);
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font: 800 22px/1 var(--display);
+  letter-spacing: -0.045em;
+  text-decoration: none;
+}
+.scope {
+  padding: 3px 10px;
+  border: 1.5px dashed var(--faint);
+  border-radius: 999px;
+  color: var(--muted);
+  font: 600 11.5px var(--sans);
+  white-space: nowrap;
+}
+.top-gap {
+  flex: 1;
+}
+.kept-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 42px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 999px;
+  background: none;
+  font: 700 15px var(--display);
+}
+.kept-btn .count {
+  min-width: 1.6em;
+  justify-content: center;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: var(--keep);
+  color: var(--keep-ink);
+  font-size: 13px;
+}
+.kept-btn:hover {
+  background: var(--panel);
+}
+
+.layout {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px 20px 48px;
+}
+.layout.is-loading .panel-head {
+  visibility: hidden;
+}
+
+/* Workspace: attached blocks. The scan docks across the top; the post and the queue tuck under it side by side, and the
+   decisions dock tucks under the queue. Each block has the hard ink edge and casts a hard shadow onto the one below. */
+/* The post column never squeezes X's 550px post (550 + padding + edges = 614px): highlights only line up at that width.
+   Below 1000px, where that would leave the queue too narrow, the blocks stack instead. */
+.workspace {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(614px, 1.22fr) minmax(0, 1fr); /* 1.22 : 1 is the old 1 : 0.82; fr totals under 1 would leave space unused once the post column clamps */
+  color: var(--ink);
+  --scan-text: #c6ff3d;
+  --tuck: 22px;
+}
+.work {
+  display: contents;
+}
+.post-analysis,
+.post-col,
+.queue-block,
+.dock-block {
+  position: relative;
+  border: 2px solid var(--edge);
+  border-radius: 26px;
+}
+/* On a near-black page an ink edge disappears, so in dark mode blocks keep their shape with a lifted edge; the black
+   hard shadows still show where they fall on the block below. */
+@media (prefers-color-scheme: dark) {
+  :is(.post-analysis, .post-col, .queue-block, .dock-block) {
+    border-color: #3a3a41;
+  }
+}
+/* The post block is paper, like the page: the post is content, not control. */
+.post-col {
+  grid-column: 1;
+  z-index: 1;
+  min-width: 0;
+  margin-top: calc(-1 * var(--tuck));
+  padding: calc(var(--tuck) + 22px) 30px 30px;
+  outline: none;
+  scroll-margin-top: 80px;
+  --ink: #0b0b0d;
+  --muted: #5c5b62;
+  --faint: #67666d;
+  --line: #d9d7d0;
+  --panel: #e9e7e1;
+  --surface: #fff;
+  --sunk: #e6e4de;
+  --hot-text: #c4005c;
+  --focus: #6a4dff;
+  --scan-text: #4d6b00;
+  --bg: #f4f3ef;
+  background: #f4f3ef;
+  color: var(--ink);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  .post-col {
+    --ink: #f4f3ef;
+    --muted: #a9a8af;
+    --faint: #8d8c93;
+    --line: #2d2d32;
+    --panel: #1a1a1d;
+    --surface: #1c1c20;
+    --sunk: #26262b;
+    --hot-text: #ff4d9a;
+    --focus: #b3a6ff;
+    --scan-text: #c6ff3d;
+    --bg: #121214;
+    background: #121214;
+    color-scheme: dark;
+  }
+}
+.workspace .post-frame {
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  min-height: 450px;
+  gap: 20px;
+}
+.original-label {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 11px;
+}
+.post-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 4px 12px;
+  min-height: 34px;
+  margin-bottom: 10px;
+  font-size: 13.5px;
+}
+.post-label {
+  font-weight: 600;
+}
+.post-src {
+  color: var(--muted);
+}
+.post-shell {
+  height: 420px;
+  border-radius: 24px;
+  background: var(--panel);
+}
+.post-note {
+  margin-top: 12px;
+  color: var(--faint);
+  font-size: 12.5px;
+}
+.post-note b {
+  color: var(--ink);
+  font-weight: 600;
+  margin-right: 4px;
+}
+.back {
+  padding: 6px 14px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--surface);
+  font: 700 14px var(--display);
+}
+
+/* Official embed shell (the X embed component). The outer frame clips to X's own 12px card radius, so the
+   iframe's square backing corners never show; nothing inside the widget is cropped. Only the scan layer sits over it. */
+.embed-frame {
+  width: 100%;
+  max-width: 550px;
+  margin: 0 auto;
+  border-radius: 12px;
+  overflow: hidden;
+  clip-path: inset(0 round 12px);
+}
+.embed-frame iframe {
+  display: block;
+}
+/* Post frame (src/components/post-frame.tsx): an app-owned rounded container with a stable minimum height. Grid
+   centres its content vertically; the embed frame centres itself horizontally (max-width + auto margins),
+   so X's mount keeps a definite width. Taller posts just grow the container; nothing is cropped.
+   Defined before the media queries so the phone overrides win the cascade. */
+.post-frame {
+  display: grid;
+  align-content: center;
+  min-height: 420px;
+  padding: 20px;
+  border-radius: 24px;
+  background: var(--panel);
+}
+.post-frame:has(.post-frame-head) {
+  align-content: stretch;
+  grid-template-rows: auto 1fr;
+  gap: 16px;
+}
+.post-frame > .embed-frame {
+  align-self: center;
+}
+.post-frame-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  color: var(--ink);
+}
+.post-frame-head strong {
+  font: 800 18px/1.2 var(--display);
+  overflow-wrap: anywhere;
+}
+.member-badge {
+  padding: 4px 7px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.2;
+}
+/* Loading and error states sit directly on the container rather than as a second card. */
+.post-frame .embed-placeholder {
+  background: none;
+  border: none;
+}
+.person .post-frame {
+  min-height: 260px;
+  padding: 12px;
+  border-radius: 18px;
+}
+.embed-shell {
+  position: relative;
+  min-height: 240px;
+}
+/* The mount div needs a definite width before X measures it; flex centering let it shrink to ~250px. */
+.x-embed > div {
+  width: 100%;
+  max-width: 550px;
+  margin: 0 auto;
+}
+.x-embed .twitter-tweet {
+  margin: 0 !important;
+}
+.embed-placeholder {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: 48px 24px;
+  text-align: center;
+  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+.embed-placeholder h3 {
+  margin: 4px 0 0;
+  font: 700 24px/1.1 var(--display);
+  letter-spacing: -0.03em;
+}
+.embed-placeholder p {
+  max-width: 36ch;
+  color: var(--muted);
+  font-size: 13px;
+}
+.embed-placeholder a {
+  color: var(--muted);
+  font-size: 12.5px;
+}
+.embed-symbol {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--bg);
+  font-size: 20px;
+}
+.embed-placeholder.loading .embed-symbol {
+  animation: breathe 1.4s ease-in-out infinite;
+}
+@keyframes breathe {
+  50% {
+    opacity: 0.4;
+  }
+}
+
+/* Empty queue: one message on the paper post block, with a sticker and its action. No inner card. */
+.empty {
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 12px;
+  min-height: 420px;
+  padding: 40px 24px;
+  text-align: center;
+}
+.empty-sticker {
+  display: grid;
+  place-items: center;
+  width: 76px;
+  aspect-ratio: 1;
+  margin-bottom: 8px;
+  border: 2px solid var(--edge);
+  border-radius: 22px;
+  background: var(--surface);
+  box-shadow: 0 5px 0 var(--edge);
+  font: 800 40px/1 var(--display);
+  rotate: -6deg;
+}
+.empty h2 {
+  font: 800 40px/1 var(--display);
+  letter-spacing: -0.045em;
+}
+.empty p {
+  max-width: 36ch;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+/* Without a scan block (empty queue) the first row has nothing to tuck under. */
+@media (min-width: 1000px) {
+  .workspace:not(:has(> .post-analysis)) :is(.post-col, .panel) {
+    margin-top: 0;
+  }
+  .workspace:not(:has(> .post-analysis)) :is(.post-col, .queue-block) {
+    padding-top: 28px;
+  }
+}
+
+/* The controls column: the queue block (count, evidence) docks onto the decisions block. Its height follows the post. */
+.panel {
+  grid-column: 2;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  margin: calc(-1 * var(--tuck)) 0 0 -2px;
+  color: var(--ink);
+}
+.queue-block {
+  flex: 1;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+  padding: calc(var(--tuck) + 22px) 30px 28px;
+  background: var(--slab);
+  box-shadow: 0 6px 0 var(--edge);
+}
+.dock-block {
+  z-index: 1;
+  display: grid;
+  gap: 12px;
+  margin-top: calc(-1 * var(--tuck));
+  padding: calc(var(--tuck) + 20px) 30px 22px;
+  background: var(--panel);
+}
+.panel-head {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+  gap: 20px;
+  padding: 10px 0;
+}
+.panel-head h1 {
+  font: 800 clamp(36px, 4.2vw, 53px)/0.98 var(--display);
+  letter-spacing: -0.047em;
+}
+.panel-head .queue-count {
+  display: block;
+  margin-bottom: 12px;
+  font-size: clamp(70px, 8vw, 104px);
+  line-height: 0.9;
+  letter-spacing: -0.06em;
+}
+.panel-head .br {
+  display: block;
+}
+.panel-sub {
+  max-width: 26ch;
+  color: var(--muted);
+  font-size: 13px;
+}
+.panel-foot {
+  color: var(--muted);
+  font-size: 12px;
+}
+.panel-foot .confirm {
+  color: var(--ink);
+}
+/* Scanning is the shared header of the connected workspace, without a decorative top rule.
+   The current post owns its result; leaving it discards that result without caching. */
+.post-analysis {
+  grid-column: 1 / -1;
+  z-index: 3;
+  min-height: 150px;
+  padding: 22px 30px;
+  background: color-mix(in srgb, var(--scan) 3%, var(--slab));
+  box-shadow: 0 6px 0 var(--edge);
+  scroll-margin-top: 84px;
+  animation: scan-in 0.24s ease-out;
+}
+.scan-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 16px;
+  margin-bottom: 12px;
+}
+.scan-inputs {
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--muted);
+  font: 400 12px/1.4 var(--sans);
+  text-align: left;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+.scan-inputs:hover {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.scan-label,
+.scan-kicker {
+  color: var(--muted);
+  font: 600 11px var(--sans);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+.scan-label .scan-glyph {
+  display: none;
+}
+.scan-usage {
+  max-width: 120px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.3;
+  text-align: right;
+}
+@keyframes scan-in {
+  from {
+    opacity: 0;
+    translate: 0 8px;
+  }
+}
+
+/* Big tactile decisions */
+/* Pass and Keep sit side by side, matching their ← → keys. Both are big; Keep is wider and loud. */
+.decide {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr);
+  gap: 12px;
+}
+.big {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  height: 76px;
+  padding: 0 26px;
+  border: 2px solid var(--edge);
+  border-radius: 24px;
+  background: var(--surface);
+  color: var(--ink);
+  text-decoration: none;
+  font: 800 30px/1 var(--display);
+  letter-spacing: -0.04em;
+  box-shadow: 0 6px 0 var(--edge);
+  transition:
+    transform 0.1s,
+    box-shadow 0.1s,
+    background 0.15s;
+}
+.big i {
+  font-style: normal;
+  font-weight: 600;
+}
+.big:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 7px 0 var(--edge);
+}
+.big:active:not(:disabled),
+.big.on {
+  transform: translateY(5px);
+  box-shadow: 0 1px 0 var(--edge);
+}
+.big.keep {
+  background: var(--keep);
+  color: var(--keep-ink);
+}
+.big,
+.big.keep {
+  height: 96px;
+  font-size: 32px;
+}
+.workspace .big {
+  height: 76px;
+  font-size: clamp(24px, 2.4vw, 29px);
+  padding: 0 clamp(14px, 1.5vw, 20px);
+  border-radius: 17px;
+}
+.big.pass.on {
+  background: var(--sunk);
+}
+.big span[aria-hidden] {
+  font-weight: 600;
+}
+
+.fly {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 45;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--keep);
+  color: var(--keep-ink);
+  border: 2px solid var(--edge);
+  font: 800 15px var(--display);
+  pointer-events: none;
+}
+
+/* Scan: relevance leads; supporting probabilities remain visible in a compact vertical list. */
+.scan-glyph {
+  position: relative;
+  width: 18px;
+  height: 18px;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+}
+.scan-glyph::after {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  background: var(--scan);
+}
+.scan {
+  display: grid;
+}
+.scan-step {
+  width: 100%;
+  display: grid;
+  gap: 12px;
+  justify-items: start;
+}
+.scan-step > .big {
+  width: auto;
+  min-width: 220px;
+}
+.scan-title {
+  font: 800 36px/0.98 var(--display);
+  letter-spacing: -0.045em;
+}
+.modal .scan-title {
+  margin: 0;
+}
+.scan-lede {
+  color: var(--muted);
+  font-size: 15.5px;
+  max-width: 36ch;
+}
+.modal .scan-lede {
+  margin: 0;
+}
+.big.scan-go {
+  height: 54px;
+  padding: 0 20px;
+  border-radius: 18px;
+  font-size: 21px;
+  background: var(--scan);
+  color: var(--scan-ink);
+  box-shadow: 0 4px 0 var(--edge);
+  margin: 4px 0;
+}
+.scan-note {
+  padding: 10px 14px;
+  border: 1.5px dashed var(--faint);
+  border-radius: 14px;
+  color: var(--muted);
+  font-size: 14px;
+}
+/* Signed out: the intro takes the scan block's place (SignedOutIntro in src/components/scan.tsx), with the same two
+   columns as a result: the pitch over the post, three steps over the queue. Step numbers are stickers; lime marks the
+   in-common step and magenta the Keep step, as in the app itself. */
+.intro {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.82fr);
+  align-items: center;
+  gap: 20px 60px;
+}
+.intro-lead {
+  display: grid;
+  justify-items: start;
+  gap: 10px;
+}
+.intro-lead .scan-title {
+  font-size: 40px;
+  text-wrap: balance;
+}
+.intro-lead .scan-lede {
+  max-width: 46ch;
+  text-wrap: pretty;
+}
+.intro-steps {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+}
+.intro-steps li {
+  counter-increment: step;
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  column-gap: 14px;
+  align-items: start;
+}
+.intro-steps li::before {
+  content: counter(step);
+  grid-row: span 2;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 2px solid var(--edge);
+  border-radius: 11px;
+  background: var(--surface);
+  box-shadow: 0 3px 0 var(--edge);
+  font: 800 17px/1 var(--display);
+  rotate: -4deg;
+}
+.intro-steps li:nth-child(2)::before {
+  background: var(--scan);
+  color: var(--scan-ink);
+  rotate: 3deg;
+}
+.intro-steps li:nth-child(3)::before {
+  background: var(--keep);
+  color: var(--keep-ink);
+}
+.intro-steps b {
+  font: 700 16px/1.25 var(--display);
+  letter-spacing: -0.015em;
+}
+.intro-steps span {
+  color: var(--muted);
+  font-size: 13px;
+}
+.intro-steps mark {
+  padding: 0 3px;
+  border-radius: 3px;
+  background: var(--scan);
+  color: var(--scan-ink);
+}
+/* Sources opens as a light-dismiss popover anchored to its button, so the header never changes height. */
+.scan-sources-btn {
+  anchor-name: --scan-sources;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--ink);
+  font: 700 13px var(--sans);
+  text-decoration: underline;
+  text-decoration-color: var(--faint);
+  text-underline-offset: 4px;
+}
+.scan-sources[popover] {
+  position-anchor: --scan-sources;
+  position-area: bottom span-right;
+  position-try-fallbacks: flip-block, flip-inline;
+  margin: 10px 0;
+  width: min(420px, calc(100vw - 32px));
+  max-height: min(60vh, 480px);
+  overflow: auto;
+  padding: 18px 20px;
+  border: 2px solid var(--edge);
+  border-radius: 18px;
+  background: var(--slab);
+  color: var(--ink);
+  box-shadow:
+    0 6px 0 var(--edge),
+    0 24px 50px -20px rgb(0 0 0 / 0.7);
+}
+.scan-sources .scan-source {
+  padding: 0;
+}
+.scan-sources .scan-foot {
+  margin-top: 12px;
+}
+/* Result: the header uses the same two columns as the blocks below. Left, over the post: the score sticker and the
+   explanation. Right, over the queue: the three signals in one aligned grid of label, meter and value, so labels never
+   wrap. Scanning keeps the same shape with a waiting sticker and pending meters. */
+.scan-result {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.82fr);
+  align-items: center;
+  gap: 16px 60px;
+  width: 100%;
+}
+.scan-overall {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  min-width: 0;
+}
+.scan-copy {
+  display: grid;
+  justify-items: start;
+  gap: 10px;
+  min-width: 0;
+}
+.scan-reason {
+  max-width: 24ch;
+  font: 800 30px/1.04 var(--display);
+  letter-spacing: -0.04em;
+  text-wrap: balance;
+}
+.scan-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.scan-meta .scan-inputs {
+  font-size: 13px;
+}
+.scan-tentative {
+  padding: 2px 9px;
+  border: 1px dashed var(--faint);
+  border-radius: 999px;
+  color: var(--ink);
+  font: 600 11.5px/1.4 var(--sans);
+}
+.score-sticker {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 104px;
+  aspect-ratio: 1;
+  border: 2px solid var(--edge);
+  border-radius: 50%;
+  background: var(--scan);
+  color: var(--scan-ink);
+  box-shadow: 0 5px 0 var(--edge);
+}
+.score-sticker .scan-score {
+  display: flex;
+  align-items: baseline;
+  margin: 0;
+  font: 800 44px/1 var(--display);
+  letter-spacing: -0.06em;
+  font-variant-numeric: tabular-nums;
+}
+.score-sticker .scan-score small {
+  margin-left: 1px;
+  font: 700 11px var(--sans);
+  letter-spacing: 0;
+  opacity: 0.75;
+}
+.score-sticker.is-busy {
+  rotate: -5deg;
+  border: 2px dashed var(--scan);
+  background: none;
+  box-shadow: none;
+  color: var(--scan-text);
+  font: 800 30px/1 var(--display);
+  animation: breathe 1.2s ease-in-out infinite;
+}
+.scan-signals {
+  display: grid;
+  grid-template-columns: max-content minmax(60px, 1fr) 3.4em;
+  align-items: center;
+  gap: 14px 16px;
+  margin: 0;
+}
+.scan-signals > div,
+.scan-signals dd {
+  display: contents;
+}
+.scan-signals dt {
+  color: var(--muted);
+  font: 500 14px/1.3 var(--sans);
+  white-space: nowrap;
+}
+.meter {
+  height: 6px;
+  border-radius: 99px;
+  background: color-mix(in srgb, var(--scan) 14%, transparent);
+  overflow: hidden;
+}
+.meter b {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--scan);
+  transform-origin: left;
+}
+.meter.is-empty {
+  background: none;
+  border: 1px dashed var(--line);
+}
+.scan-pct,
+.scan-none {
+  justify-self: end;
+  color: var(--ink);
+  font: 700 20px/1 var(--display);
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+.scan-pct small {
+  margin-left: 1px;
+  color: var(--muted);
+  font-size: 12px;
+  letter-spacing: 0;
+}
+.scan-none {
+  color: var(--muted);
+}
+.scan-pending {
+  justify-self: end;
+  width: 34px;
+  height: 14px;
+  border-radius: 5px;
+  background: var(--sunk);
+}
+.is-scanning .meter,
+.is-scanning .scan-pending {
+  animation: breathe 1.2s ease-in-out infinite;
+}
+.scan-chips {
+  display: none;
+}
+
+/* Evidence cards (src/components/evidence.tsx) sit in the queue block; cords plug each one into its outline on the post.
+   Hovering or focusing a card lights its outline and dims the others. */
+.evidence {
+  display: grid;
+  gap: 10px;
+}
+.evidence-label {
+  color: var(--muted);
+  font: 600 11px var(--sans);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+.evidence ul {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ev {
+  position: relative;
+  display: grid;
+  gap: 3px;
+  padding: 10px 14px 12px 20px;
+  border: 2px solid var(--edge);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: 0 3px 0 var(--edge);
+  outline-offset: 4px;
+  transition: background 0.15s;
+}
+.ev:hover,
+.ev:focus-visible {
+  background: color-mix(in srgb, var(--scan) 16%, var(--surface));
+}
+.ev small {
+  color: var(--muted);
+  font: 600 11.5px var(--sans);
+}
+.ev q {
+  font: 800 18px/1.15 var(--display);
+  letter-spacing: -0.03em;
+  overflow-wrap: anywhere;
+}
+.ev.is-approx {
+  border-style: dashed;
+  box-shadow: none;
+}
+.plug {
+  position: absolute;
+  left: -10px;
+  top: 50%;
+  translate: 0 -50%;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--edge);
+  border-radius: 50%;
+  background: var(--scan);
+}
+.ev.is-approx .plug {
+  border-color: var(--scan);
+  background: var(--slab);
+}
+.cords {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+/* A cord is a cable: an ink jacket with a lime core, so it stays visible where it crosses the paper post block. */
+.cords path {
+  fill: none;
+  stroke-linecap: round;
+}
+.cords .casing {
+  stroke: var(--edge);
+  stroke-width: 5.5;
+}
+.cords .core {
+  stroke: var(--scan);
+  stroke-width: 2.5;
+}
+.cords .is-approx {
+  stroke-dasharray: 6 5;
+  animation: fade-in 0.6s 0.3s both;
+}
+.cords circle {
+  fill: var(--scan);
+  stroke: var(--edge);
+  stroke-width: 2;
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+.app:has(.ev:is(:hover, :focus-visible)) .post-spot {
+  --spot-a: 25%;
+}
+.app:has([data-evidence="0"]:is(:hover, :focus-visible)) .post-spot[data-phrases~="0"],
+.app:has([data-evidence="1"]:is(:hover, :focus-visible)) .post-spot[data-phrases~="1"],
+.app:has([data-evidence="2"]:is(:hover, :focus-visible)) .post-spot[data-phrases~="2"],
+.app:has([data-evidence="3"]:is(:hover, :focus-visible)) .post-spot[data-phrases~="3"],
+.app:has([data-evidence="4"]:is(:hover, :focus-visible)) .post-spot[data-phrases~="4"],
+.app:has([data-evidence="5"]:is(:hover, :focus-visible)) .post-spot[data-phrases~="5"] {
+  --spot-a: 100%;
+}
+
+/* The scan's layer over X's widget (src/components/post-frame.tsx): pointer-transparent, so the post stays fully usable.
+   A sweep reads the post while scanning; highlights (fainter and dashed when approximate) mark where Clef found your phrases. */
+.embed-frame {
+  position: relative;
+}
+.post-layer {
+  position: absolute;
+  pointer-events: none;
+}
+/* On the paper post a highlight is a marker stroke behind the words, multiplied so the text stays fully legible (a lime
+   outline would vanish on white). Approximate spots are fainter with a dashed ink edge. Dark posts get a lime outline. */
+.post-spot {
+  --spot-a: 80%;
+  position: absolute;
+  box-sizing: content-box;
+  margin: -1px -5px;
+  padding: 1px 5px;
+  border-radius: 4px 7px 5px 6px;
+  background: color-mix(in srgb, var(--scan) var(--spot-a), transparent);
+  mix-blend-mode: multiply;
+  rotate: -0.6deg;
+  transition:
+    background 0.2s,
+    border-color 0.2s;
+}
+.post-spot.is-approx {
+  --spot-a: 45%;
+  outline: 1.5px dashed var(--edge);
+  outline-offset: 2px;
+}
+@media (prefers-color-scheme: dark) {
+  .post-spot {
+    --spot-a: 100%;
+    margin: -7px;
+    padding: 5px;
+    border: 2px solid color-mix(in srgb, var(--scan) var(--spot-a), transparent);
+    border-radius: 8px;
+    background: none;
+    mix-blend-mode: normal;
+    rotate: none;
+  }
+  .post-spot.is-approx {
+    --spot-a: 70%;
+    outline: none;
+    border-style: dashed;
+  }
+}
+.post-sweep {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.post-sweep::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 120px;
+  translate: 0 -100%;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    color-mix(in srgb, var(--scan) 45%, transparent)
+  );
+  mix-blend-mode: multiply;
+  border-bottom: 2px solid var(--edge);
+  animation: sweep 1.9s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+@keyframes sweep {
+  to {
+    top: 100%;
+    translate: 0 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .post-sweep {
+    display: none;
+  }
+}
+.spot-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 11px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: none;
+  color: var(--muted);
+  font: 600 12px var(--sans);
+}
+.spot-toggle svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-dasharray: 3 2;
+}
+.spot-toggle.on {
+  border-color: var(--edge);
+  background: var(--scan);
+  color: var(--scan-ink);
+}
+.spot-toggle.on svg {
+  stroke-dasharray: none;
+}
+.spot-toggle:hover {
+  color: var(--ink);
+}
+.scan-source {
+  display: grid;
+  gap: 10px;
+  padding: 6px 8px;
+}
+.scan-bio {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 14px;
+}
+.scan-source-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  font-size: 14px;
+}
+.scan-source-head b {
+  font: 800 17px var(--display);
+  letter-spacing: -0.02em;
+}
+.scan-source-head a {
+  color: var(--hot-text);
+  font-weight: 600;
+  text-decoration: none;
+}
+.scan-source-head a:hover {
+  text-decoration: underline;
+}
+.scan-source-head .btn {
+  margin-left: auto;
+}
+.scan-foot {
+  color: var(--faint);
+  font-size: 12.5px;
+}
+.scan-again {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+/* Your list (Kept): a native modal dialog, a drawer on wide screens */
+.shelf {
+  inset: 0 0 0 auto;
+  margin: 0;
+  width: min(480px, 100vw);
+  max-width: 100vw;
+  height: 100dvh;
+  max-height: none;
+  overflow-y: auto;
+  padding: 24px;
+  color: var(--ink);
+  background: var(--slab);
+  border: none;
+  box-shadow: -20px 0 60px -20px rgb(0 0 0 / 0.5);
+}
+.shelf[open] {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  animation: drawer-in 0.42s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.shelf::backdrop {
+  background: rgb(10 10 8 / 0.4);
+}
+@keyframes drawer-in {
+  from {
+    transform: translateX(100%);
+  }
+}
+@keyframes sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+}
+.shelf-close {
+  display: grid;
+  place-items: center;
+}
+.shelf-head {
+  position: relative;
+}
+.shelf-head h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font: 800 34px/1 var(--display);
+  letter-spacing: -0.045em;
+}
+.shelf-head h2 .stash-icon {
+  width: 24px;
+  height: 27px;
+  color: var(--keep);
+}
+.shelf-head .back {
+  margin-bottom: 6px;
+}
+.shelf-open-all {
+  display: grid;
+  gap: 10px;
+  margin: 6px 0 8px;
+}
+.shelf-open-all .big {
+  width: 100%;
+  height: 58px;
+  padding: 0 20px;
+  font-size: 25px;
+  border-radius: 18px;
+}
+.shelf-open-all p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+/* Below the people list: quiet sections for unlinked posts and Passed. */
+.shelf-more {
+  display: grid;
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px solid var(--line);
+}
+.shelf-section > summary,
+.shelf-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 4px;
+  border: none;
+  background: none;
+  color: var(--ink);
+  font: 700 15px var(--display);
+  text-align: left;
+  cursor: pointer;
+}
+.shelf-section > summary small,
+.shelf-link small {
+  color: var(--muted);
+  font: 600 12.5px var(--sans);
+}
+.shelf-section[open] > summary {
+  color: var(--muted);
+}
+.shelf-section .people-list {
+  margin-bottom: 10px;
+}
+.shelf-head p {
+  color: var(--muted);
+  font-size: 12.5px;
+}
+.shelf-close {
+  position: absolute;
+  right: -8px;
+  top: -8px;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  font-size: 22px;
+  color: var(--muted);
+}
+.rows {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.rows li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 8px 8px 14px;
+  border-radius: 14px;
+  background: var(--bg);
+  overflow: hidden;
+}
+.rows li.current {
+  box-shadow: inset 0 0 0 1.5px var(--ink);
+}
+.row-main {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  padding: 0;
+  border: none;
+  background: none;
+  text-align: left;
+}
+.row-main b {
+  font-weight: 600;
+  font-size: 13.5px;
+}
+.row-main b i {
+  font: 400 11.5px var(--mono);
+  color: var(--faint);
+}
+.row-main span {
+  color: var(--muted);
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.row-main:hover b {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.rows-empty {
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px dashed var(--line);
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: center;
+  padding: 0 16px 40px;
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+.toast-dock {
+  position: fixed;
+  left: 50%;
+  top: 72px;
+  z-index: 40;
+  translate: -50% 0;
+  width: min(460px, calc(100vw - 32px));
+}
+/* Inside Stash the toast sits at the drawer's foot, clear of its tabs and first card. */
+.shelf .toast-dock {
+  top: auto;
+  left: auto;
+  right: 16px;
+  bottom: 16px;
+  translate: none;
+  width: min(420px, calc(100vw - 32px));
+}
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 8px 8px 18px;
+  border-radius: 999px;
+  background: var(--slab);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  font-size: 14.5px;
+  font-weight: 500;
+  box-shadow: var(--shadow);
+}
+.toast span {
+  flex: 1;
+}
+.toast button {
+  padding: 6px 14px;
+  border: none;
+  border-radius: 999px;
+  background: var(--keep);
+  color: var(--keep-ink);
+  font: 700 13.5px var(--display);
+}
+.toast .x {
+  background: none;
+  color: inherit;
+  opacity: 0.6;
+  font-size: 18px;
+  padding: 0 8px;
+}
+
+/* Dialogs and auth */
+.modal {
+  width: min(440px, calc(100vw - 32px));
+  max-height: 90dvh;
+  overflow-y: auto;
+  padding: 28px;
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  background: var(--slab);
+  color: var(--ink);
+  box-shadow: var(--shadow);
+}
+.modal::backdrop {
+  background: rgb(10 10 8 / 0.45);
+  backdrop-filter: blur(4px);
+}
+.modal[open] {
+  animation: rise 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+}
+.modal h2 {
+  font: 800 32px/1 var(--display);
+  letter-spacing: -0.035em;
+  margin-bottom: 10px;
+}
+.modal p {
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+.modal hr {
+  border: none;
+  border-top: 1px solid var(--line);
+  margin: 16px 0;
+}
+.modal-close {
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  font-size: 22px;
+  color: var(--muted);
+}
+.modal-close:hover {
+  background: var(--sunk);
+}
+.sheet-step {
+  display: grid;
+}
+.sheet-step h2:focus {
+  outline: none;
+}
+.sheet-step .btn + .btn,
+.sheet-step .btn.block {
+  margin-top: 8px;
+}
+.patch {
+  display: flex;
+  align-items: center;
+  margin: 4px 0 22px;
+  padding: 0 14px 0 0;
+}
+.patch-cord {
+  flex: 1;
+  height: 40px;
+  overflow: visible;
+}
+.cord-bg,
+.cord {
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+/* Motion draws the cord with a normalized dash; non-scaling-stroke would break that dash math, so only the dotted guide uses it. */
+.cord-bg {
+  vector-effect: non-scaling-stroke;
+}
+.cord-bg {
+  stroke: var(--faint);
+  stroke-dasharray: 2 7;
+}
+.cord {
+  stroke: var(--signal);
+}
+.patch.is-cancelled .cord {
+  stroke: var(--faint);
+}
+.patch.is-error .cord {
+  stroke: var(--danger);
+}
+.node {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 2px solid var(--ink);
+  background: var(--surface);
+}
+.node.hash {
+  background: var(--keep);
+  color: var(--keep-ink);
+  border-color: var(--edge);
+  font: 800 28px/1 var(--display);
+}
+.node.x {
+  background: var(--ink);
+  color: var(--bg);
+  font-size: 22px;
+}
+.patch.is-handoff .node.x {
+  box-shadow: 0 0 0 0 var(--signal);
+  animation: ring 1.3s ease-out infinite;
+}
+@keyframes ring {
+  to {
+    box-shadow: 0 0 0 12px color-mix(in srgb, var(--signal) 0%, transparent);
+  }
+}
+.account {
+  position: relative;
+}
+.avatar-btn {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  background: var(--sunk);
+  overflow: hidden;
+  font-weight: 600;
+}
+.avatar-btn img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.menu {
+  position: absolute;
+  right: 0;
+  top: 44px;
+  width: 264px;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--slab);
+  color: var(--ink);
+  box-shadow: var(--shadow);
+  transform-origin: top right;
+  z-index: 30;
+}
+.menu-head {
+  display: grid;
+  gap: 2px;
+  padding: 10px 10px 12px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--line);
+}
+.menu-head b {
+  font: 700 17px var(--display);
+  letter-spacing: -0.02em;
+}
+.menu-head span {
+  color: var(--muted);
+  font-size: 13px;
+}
+.menu-head small {
+  color: var(--faint);
+  font-size: 12px;
+  margin-top: 4px;
+}
+.badge {
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--keep);
+  color: var(--keep-ink);
+  font: 500 11px var(--mono);
+  font-style: normal;
+}
+.menu > button {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: 12px;
+  background: none;
+  text-align: left;
+  font-size: 13.5px;
+}
+.menu > button:hover {
+  background: var(--sunk);
+}
+
+.access {
+  margin-top: 14px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.access summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--ink);
+}
+.access p {
+  margin: 8px 0 0 !important;
+  font-size: 13px;
+}
+
+/* Phones and narrow windows: scan and post inline, decisions pinned to the bottom */
+@media (max-width: 999px) {
+  .top {
+    height: 56px;
+    padding: 0 16px;
+    gap: 8px;
+  }
+  .layout {
+    padding: 4px 10px 24px;
+  }
+  /* The blocks stack into a tower: queue, scan, post; the decisions pin to the bottom. */
+  .workspace {
+    display: flex;
+    flex-direction: column;
+    --tuck: 16px;
+  }
+  .post-frame {
+    min-height: 300px;
+    padding: 10px;
+    border-radius: 20px;
+  }
+  .post-shell {
+    height: 300px;
+    border-radius: 20px;
+  }
+  .empty {
+    min-height: 300px;
+    padding: 28px 16px;
+  }
+  .empty h2 {
+    font-size: 30px;
+  }
+  .panel,
+  .dock-block {
+    display: contents;
+  }
+  .post-analysis,
+  .post-col,
+  .queue-block {
+    border-radius: 20px;
+  }
+  .queue-block {
+    order: 1;
+    flex: none;
+    z-index: 4;
+    gap: 0;
+    padding: 0;
+    box-shadow: 0 4px 0 var(--edge);
+  }
+  .panel-head {
+    padding: 16px 0 16px 16px;
+    gap: 0;
+    min-width: 0;
+  }
+  .evidence,
+  .cords {
+    display: none;
+  }
+  .panel-head h1,
+  .panel-head .queue-count {
+    display: inline;
+    margin: 0;
+    font-size: 19px;
+    line-height: 1.1;
+    letter-spacing: -0.035em;
+  }
+  .panel-head .br {
+    display: inline;
+  }
+  .panel-sub {
+    display: none;
+  }
+  .post-analysis {
+    order: 2;
+    min-height: 0;
+    margin-top: calc(-1 * var(--tuck));
+    padding: calc(var(--tuck) + 12px) 16px 14px;
+    box-shadow: 0 4px 0 var(--edge);
+  }
+  .scan-heading {
+    margin-bottom: 8px;
+  }
+  .scan-title {
+    font-size: 25px;
+  }
+  .scan-lede {
+    font-size: 13px;
+  }
+  .scan-step {
+    gap: 8px;
+  }
+  .post-col {
+    order: 3;
+    padding: calc(var(--tuck) + 12px) 10px 16px;
+  }
+  .workspace .post-frame {
+    min-height: 300px;
+    gap: 12px;
+  }
+  .post-frame-head {
+    gap: 8px;
+  }
+  .post-frame-head strong {
+    font-size: 15px;
+  }
+  .original-label {
+    font-size: 10px;
+  }
+  .post-head {
+    margin-bottom: 12px;
+  }
+  /* Fixed to the viewport: the post's height can never move the decisions. The footer reserves room below. */
+  .decide {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 15;
+    grid-template-columns: 1fr 1.3fr;
+    gap: 10px;
+    padding: 12px 16px calc(16px + env(safe-area-inset-bottom));
+    background: var(--slab);
+    border-top: 1px solid var(--line);
+    color: var(--ink);
+  }
+  .foot {
+    padding-bottom: calc(110px + env(safe-area-inset-bottom));
+  }
+  .big,
+  .big.keep,
+  .workspace .big {
+    height: 58px;
+    padding: 0 16px;
+    border-radius: 14px;
+    font-size: 28px;
+    box-shadow: 0 4px 0 var(--edge);
+    justify-content: center;
+  }
+  .big:active:not(:disabled),
+  .big.on {
+    transform: translateY(3px);
+    box-shadow: 0 1px 0 var(--edge);
+  }
+  /* Below the tower the foot sits on the page, so it takes the paper colours, not the slab ones. */
+  .panel-foot {
+    order: 4;
+    padding: 14px 16px;
+    text-align: center;
+    --ink: #0b0b0d;
+    --muted: #5c5b62;
+    color: var(--muted);
+  }
+  .shelf {
+    inset: auto 0 0 0;
+    width: auto;
+    height: auto;
+    max-height: 86dvh;
+    border-radius: 28px 28px 0 0;
+  }
+  .shelf[open] {
+    animation-name: sheet-in;
+  }
+  .modal {
+    inset: auto 0 0 0;
+    width: auto;
+    max-width: none;
+    margin: 0;
+    border-radius: 28px 28px 0 0;
+    border-bottom: none;
+    padding: 24px 20px 28px;
+  }
+}
+@media (max-width: 520px) {
+  .kept-btn {
+    padding: 0 6px;
+    gap: 4px;
+  } /* still a 42px-tall target; frees room for Continue with X at 390px */
+  .kept-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .brand-pre,
+  .cta-long {
+    display: none;
+  }
+  /* Guest bar at 390px: brand, Guest, Stash and Continue must fit inside a 16px gutter. */
+  .top {
+    gap: 4px;
+  }
+  .brand {
+    gap: 6px;
+    font-size: 18px;
+  }
+  .scope {
+    padding: 2px 7px;
+    font-size: 11px;
+  }
+  .top:has(.scan-usage) .scope {
+    display: none;
+  }
+  .scan-usage {
+    max-width: 80px;
+    font-size: 11px;
+  }
+  .top-cta {
+    padding: 0 11px;
+  }
+  .mark {
+    width: 28px;
+    height: 28px;
+    font-size: 19px;
+    border-radius: 9px;
+  }
+  .top-cta {
+    height: 38px;
+    font-size: 14px;
+  }
+  .big i {
+    display: none;
+  }
+  .big {
+    justify-content: center;
+  }
+  .panel-head h1,
+  .panel-head .queue-count {
+    font-size: 18px;
+  }
+}
+/* Smallest phones: mark only. At phone widths, "Stash" stays in the accessible name beside its icon. */
+@media (max-width: 369px) {
+  .brand-name {
+    display: none;
+  }
+}
+
+/* Keycap (src/components/ui.tsx): one key shape everywhere, sized in em so it follows its context's
+   text. It takes the surrounding text colour, so contrast matches whatever it sits on. A hint keycap on a
+   control shows only where a keyboard and fine pointer are likely; a plain keycap in text always shows. */
+.keycap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-width: 1.9em;
+  height: 1.9em;
+  padding: 0 0.45em;
+  border: 1.5px solid color-mix(in srgb, currentColor 50%, transparent);
+  border-bottom-width: 3px;
+  border-radius: 0.5em;
+  background: color-mix(in srgb, currentColor 9%, transparent);
+  color: inherit;
+  font: 700 12px/1 var(--sans);
+  vertical-align: middle;
+}
+.keycap.is-hint {
+  display: none;
+}
+@media (hover: hover) and (pointer: fine) {
+  .keycap.is-hint {
+    display: inline-flex;
+  }
+}
+.big .keycap {
+  font-size: 16px;
+}
+@media (max-width: 999px) {
+  .decide .keycap {
+    display: none;
+  }
+}
+.kept-btn .keycap {
+  font-size: 10.5px;
+}
+.stash-icon {
+  flex: none;
+  width: 13px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.post-fallback {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+/* Stash: one row per person. The row is a big profile link; "More" holds everything else. */
+.people-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.person {
+  display: grid;
+  gap: 4px;
+  padding: 6px;
+  border-radius: 20px;
+  background: var(--surface);
+}
+.person.current {
+  box-shadow: inset 0 0 0 2px var(--keep);
+}
+.person-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.person-open {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+  border-radius: 14px;
+  color: var(--ink);
+  text-decoration: none;
+  transition: background 0.15s;
+}
+a.person-open:hover {
+  background: var(--sunk);
+}
+/* The tile echoes the # mark: magenta until you've opened them, then quiet. */
+.person-tile {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 2px solid var(--edge);
+  border-radius: 12px;
+  background: var(--keep);
+  color: var(--keep-ink);
+  font: 800 20px/1 var(--display);
+  text-transform: lowercase;
+}
+.person.is-opened .person-tile,
+.person-open.is-post .person-tile {
+  background: var(--sunk);
+  color: var(--ink);
+}
+.person-id {
+  flex: 1;
+  display: grid;
+  min-width: 0;
+}
+.person-id b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: 800 20px/1.15 var(--display);
+  letter-spacing: -0.035em;
+}
+.person-id small,
+.person-note {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--muted);
+  font-size: 12.5px;
+}
+.person-go {
+  flex: none;
+  color: var(--hot-text);
+  font: 700 14px var(--display);
+}
+.person-more {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 12px;
+  background: none;
+  color: var(--muted);
+  font-size: 20px;
+  line-height: 1;
+}
+.person-more:hover,
+.person-more[aria-expanded="true"] {
+  background: var(--sunk);
+  color: var(--ink);
+}
+.person-tray,
+.person-note {
+  padding: 0 10px 8px 62px;
+}
+.person-tray {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.person-posts {
+  display: grid;
+  gap: 8px;
+  padding: 0 4px 4px;
+}
+/* Phones: the row keeps only the ↗ glyph, and the tray uses the full width. After the person rules so it wins. */
+@media (max-width: 520px) {
+  .person-go {
+    font-size: 0;
+  }
+  .person-go span {
+    font-size: 18px;
+  }
+  .person-tray,
+  .person-note {
+    padding-left: 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* Supporting flows use the same plain type, graphite sheets and native form controls. */
+.community-form {
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+}
+.community-form label {
+  font-weight: 600;
+}
+.community-form small {
+  color: var(--muted);
+  font-weight: 400;
+}
+.community-form input,
+.community-form textarea {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--ink);
+  padding: 12px;
+  font: 400 16px/1.4 var(--sans);
+}
+.community-form textarea {
+  resize: vertical;
+}
+.community-form .btn {
+  justify-self: start;
+}
+.community-form p {
+  margin: 0;
+}
+.context-editor {
+  margin: 20px 0;
+}
+.context-bio {
+  margin: 12px 0;
+  color: var(--muted);
+  font-size: 14px;
+  white-space: pre-wrap;
+}
+.foot {
+  flex-wrap: wrap;
+  gap: 12px 20px;
+}
+.connection-feedback {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  width: 100%;
+  font-size: 13px;
+}
+@media (max-width: 999px) {
+}
+
+/* Private project context: one link, then a review in the existing settings sheet. */
+.project-editor {
+  margin: 28px 0 20px;
+}
+.project-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  justify-content: space-between;
+}
+.project-heading h3 {
+  font: 800 24px/1.05 var(--display);
+  letter-spacing: -0.035em;
+  margin: 0 0 10px;
+}
+.project-heading > span {
+  flex-shrink: 0;
+}
+.project-link-row {
+  display: flex;
+  gap: 8px;
+}
+.project-link-row input {
+  flex: 1;
+}
+.project-link-row .btn {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.project-suggestions,
+.project-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.project-suggestions .link {
+  overflow-wrap: anywhere;
+  text-align: left;
+}
+.project-progress {
+  margin-top: 12px;
+}
+.project-draft {
+  padding-top: 12px;
+}
+.project-draft textarea {
+  field-sizing: content;
+  min-height: 120px;
+}
+.project-excerpt {
+  color: var(--muted);
+  font-size: 13px;
+}
+.project-excerpt blockquote {
+  margin: 10px 0;
+  padding-left: 12px;
+  border-left: 2px solid var(--line);
+}
+@media (max-width: 380px) {
+  .project-link-row {
+    flex-direction: column;
+  }
+  .project-link-row .btn {
+    align-self: flex-start;
+  }
+}
+
+@media (max-width: 760px) {
+  .scan-heading .scan-label {
+    display: none;
+  }
+}
+
+/* Scan result on phones: a smaller sticker beside the explanation, your phrases as chips, then the signal rows. */
+@media (max-width: 999px) {
+  .intro {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+  .intro-lead .scan-title {
+    font-size: 28px;
+  }
+  .intro-steps {
+    gap: 10px;
+  }
+  .intro-steps li {
+    grid-template-columns: 30px minmax(0, 1fr);
+    column-gap: 12px;
+  }
+  .intro-steps li::before {
+    width: 30px;
+    height: 30px;
+    font-size: 14px;
+    border-radius: 9px;
+  }
+  .intro-steps b {
+    font-size: 14.5px;
+  }
+  .intro-steps span {
+    display: none;
+  } /* titles alone keep the post near the top */
+  .intro-steps li {
+    align-items: center;
+  }
+  .scan-result {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .scan-overall {
+    align-items: flex-start;
+    gap: 14px;
+  }
+  .score-sticker {
+    width: 64px;
+    box-shadow: 0 3px 0 var(--edge);
+  }
+  .score-sticker .scan-score {
+    font-size: 26px;
+  }
+  .score-sticker .scan-score small {
+    font-size: 8.5px;
+  }
+  .score-sticker.is-busy {
+    font-size: 20px;
+  }
+  .scan-reason {
+    font-size: 19px;
+  }
+  .scan-long-label {
+    display: none;
+  }
+  .scan-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .scan-chips li {
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--scan) 18%, transparent);
+    font: 700 12.5px/1.3 var(--display);
+  }
+  .scan-signals {
+    gap: 8px 12px;
+  }
+  .scan-signals dt {
+    font-size: 12.5px;
+  }
+  .scan-pct,
+  .scan-none {
+    font-size: 16px;
+  }
+  .scan-pct small {
+    font-size: 10.5px;
+  }
+  .meter,
+  .meter.is-empty {
+    height: 4px;
+  }
+}
+
+/* Settings (src/components/settings.tsx): labelled groups of rows on raised cards, like a native settings pane. */
+.modal.wide {
+  width: min(580px, calc(100vw - 32px));
+}
+.set-group {
+  margin-top: 22px;
+}
+.set-label {
+  margin: 0 0 8px 4px;
+  color: var(--muted);
+  font: 600 11px var(--sans);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+.modal .set-note {
+  margin: -2px 0 10px 4px;
+  font-size: 12.5px;
+}
+.set-card {
+  display: grid;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--panel);
+  overflow: hidden;
+}
+.set-card > * + * {
+  border-top: 1px solid var(--line);
+}
+.set-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 16px;
+}
+label.set-row {
+  cursor: pointer;
+}
+.set-text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.set-text b {
+  font: 700 15.5px/1.25 var(--display);
+  letter-spacing: -0.015em;
+}
+.set-text small {
+  color: var(--muted);
+  font-size: 12.5px;
+}
+.set-actions {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.btn.danger-btn {
+  border-color: var(--danger);
+  background: var(--danger);
+  color: #0b0b0d;
+}
+.set-keys {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 0;
+  padding: 14px 16px 10px;
+  list-style: none;
+  transition: opacity 0.2s;
+}
+.set-keys li {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 12px 8px;
+  border-radius: 12px;
+  background: var(--surface);
+  font: 600 13px var(--sans);
+}
+.set-keys .keycap {
+  font-size: 15px;
+}
+.set-keys.is-off {
+  opacity: 0.4;
+}
+.set-card > .set-keys + .set-fine {
+  border-top: none;
+}
+.modal .set-fine {
+  margin: 0;
+  padding: 0 16px 14px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.set-fine .keycap {
+  margin: 0 2px;
+  font-size: 10.5px;
+}
+.set-card details {
+  margin: 0;
+  padding: 0 16px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.set-card details[open] {
+  padding-bottom: 16px;
+}
+.set-card summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 0;
+  list-style: none;
+  cursor: pointer;
+  color: var(--ink);
+  font: 700 15.5px/1.25 var(--display);
+  letter-spacing: -0.015em;
+}
+.set-card summary::-webkit-details-marker {
+  display: none;
+}
+.set-card summary::after {
+  content: "+";
+  color: var(--muted);
+  font: 400 20px/1 var(--sans);
+  transition: rotate 0.2s;
+}
+.set-card details[open] > summary::after {
+  rotate: 45deg;
+}
+.set-card details p {
+  margin: 0 0 10px !important;
+  font-size: 13px;
+}
+.set-card .project-editor {
+  margin: 0;
+  padding: 16px;
+}
+.set-card .project-heading h3 {
+  font-size: 15.5px;
+  letter-spacing: -0.015em;
+  margin-bottom: 4px;
+}
+.set-card .community-form input,
+.set-card .community-form textarea {
+  background: var(--surface);
+}
+.switch {
+  position: relative;
+  flex: none;
+  display: inline-flex;
+}
+.switch input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.switch span {
+  position: relative;
+  width: 44px;
+  height: 26px;
+  border-radius: 13px;
+  background: var(--line);
+  transition: background 0.2s;
+}
+.switch span::after {
+  content: "";
+  position: absolute;
+  left: 3px;
+  top: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
+  transition: translate 0.2s;
+}
+.switch input:checked + span {
+  background: var(--signal);
+}
+.switch input:checked + span::after {
+  translate: 18px 0;
+}
+.switch input:focus-visible + span {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+@media (max-width: 999px) {
+  .modal.wide {
+    width: auto;
+  }
+  .set-keys li {
+    padding: 10px 6px;
+  }
+}
+
+/* Desktop: the people count appears once. With evidence, the queue block is the evidence and the count moves to the
+   line under Pass/Keep, the heading staying as the page's h1 for assistive tech; without it (guests, before a scan) the
+   heading fills the block. Phones keep their count in the tower's top row. */
+@media (min-width: 1000px) {
+  .panel:not(:has(.evidence)) .foot-count {
+    display: none;
+  }
+  .queue-block:has(.evidence) .panel-head {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .foot-count {
+    color: var(--ink);
+    font-weight: 600;
+  }
+}
+@media (max-width: 999px) {
+  .foot-count {
+    display: none;
+  }
+}
+
+/* Evidence slot states: shimmering placeholders while scanning, and a quiet dashed card when nothing stood out. */
+.evidence.is-pending .ev {
+  box-shadow: none;
+  border-color: var(--line);
+  animation: breathe 1.2s ease-in-out infinite;
+}
+.evidence .ghost {
+  display: block;
+  height: 18px;
+  border-radius: 6px;
+  background: var(--sunk);
+}
+.evidence .ghost.short {
+  width: 40%;
+  height: 11px;
+  margin-bottom: 4px;
+}
+.ev-empty {
+  gap: 6px;
+  border-style: dashed;
+  border-color: var(--faint);
+  background: none;
+  box-shadow: none;
+}
+.ev-empty b {
+  font: 700 16px/1.25 var(--display);
+  letter-spacing: -0.015em;
+}
+.ev-empty .link {
+  justify-self: start;
+  margin-top: 2px;
+  color: var(--scan-text);
+  font-size: 13px;
+}
+
+/* Footer links to the maker on X and the public source: quiet, icon-sized, at least a 32px target. */
+.foot-links {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.foot-links a {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  color: var(--muted);
+  transition:
+    color 0.15s,
+    background 0.15s;
+}
+.foot-links a:hover {
+  color: var(--ink);
+  background: color-mix(in srgb, var(--ink) 8%, transparent);
+}
+.foot-links svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}

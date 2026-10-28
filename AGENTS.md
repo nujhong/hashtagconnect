@@ -2,19 +2,34 @@
 
 ## Void
 
-- This project uses [Void](https://void.cloud), a full-stack Vite framework for Cloudflare Workers with file-based API routing, server-rendered pages, and typed backend services.
-- Use Void's CLI and typed APIs. Before working with Void, read the relevant Markdown docs in `node_modules/void/docs/`; start with `guide/quickstart.md` for setup and `reference/cli.md` for commands.
+- This project uses [Void](https://void.cloud), React, TypeScript, Vite+, and pnpm on Cloudflare Workers.
+- Before changing framework integration, read the relevant installed docs in `node_modules/void/docs/`; start with `guide/quickstart.md` and `reference/cli.md`. Use native Void/Vite+ interfaces before adding adapters.
 
 <!--/injected-by-void-->
 
-## Project conventions
+## Before changing code
 
-- Follow `DESIGN.md` for UI and copy, and `docs/relevance.md` for how scans and evidence work.
-- Before finishing, run `pnpm run check` (Void types, format, lint, types) and `pnpm test` (`vp test`, unit and integration).
-- Use pnpm and native Void/Vite+ interfaces before adding tools or adapters.
-- Use `~/` for cross-directory imports; keep sibling and Node-loaded auth imports relative.
-- API routes are resource nouns: `/api/me/*` for the viewer's private state, singletons singular, collections plural, project operations nested under `/api/me/project`. GET reads, POST submits work or a change, DELETE clears; request fields are camelCase; Better Auth owns `/api/auth/*`. Routes import the schema through Void's `@schema`.
-- Prefer flat modules; add folders only for real boundaries (`components`, `server`). Colocate unit tests; put integration/e2e tests under root `tests/`.
-- Test meaningful behavior and regressions. Probes, prompt wording and implementation mirrors do not belong in the suite. Provider adapters are tested against mocked responses, never the network or paid models; live provider experiments are manual verification.
-- Keep one baseline migration until deployment is evidenced; preserve applied migrations afterward.
-- Preserve doc comments unless explicitly asked to remove them.
+- Read [architecture](docs/architecture.md) before changing module ownership or dependencies; [DESIGN.md](DESIGN.md) for UI/copy; [relevance](docs/relevance.md) for discovery, scans and evidence; [contribution conventions](CONTRIBUTING.md) for Git workflow and checks.
+- Find and fix root causes across affected callers. Preserve doc comments unless explicitly asked to remove them.
+- Before adding complexity for a speculative or very unlikely race or security case, explain its concrete failure, likelihood and complexity cost and obtain the owner's agreement.
+
+## General principles
+
+- Treat leading questions as open questions and verify their premise independently.
+- Challenge assumptions when evidence warrants it. Explain evidence and uncertainty without inventing objections.
+
+## Structure
+
+- Application code lives under `src`. Void pages, routes and queues are thin entries; browser behavior belongs in `client`, evaluation/services in `server`, browser-safe contracts in `shared`, persistence in `db`, and binding declarations in `types`.
+- Use kebab-case files/directories, PascalCase components/types, and camelCase functions/values. Preserve framework-reserved exports and conventional root document names. Vite+ enforces filename and import boundaries.
+- `~/` means the source root; use it across directories and `./` between siblings. The native Node-loaded auth graph is the narrow exception: retain explicit relative `.ts` imports there. Browser code may import inferred page-loader types only through `import type`.
+- Add folders for real responsibilities. Avoid generic utility buckets and redundant barrels.
+- API routes are resource nouns: `/api/me/*` for private viewer state, singular singletons, plural collections, project operations under `/api/me/project`. GET reads, POST submits work/change, DELETE clears; request fields are camelCase. Better Auth owns `/api/auth/*`; routes use Void's `@schema`.
+- Cloud resources use `hashtagconnect` or `hashtagconnect-<purpose>` with no environment suffix. Queue filenames determine physical names. Deployment targets the pinned personal account; existing Momentium resources are outside this project's deployment scope.
+
+## Verification
+
+- Before finishing code changes, run `pnpm run check`, `pnpm test`, and `pnpm run build`.
+- Colocate meaningful unit tests; integration tests live under root `tests/integration`. Mock provider boundaries: automated tests never call paid/network providers. Live provider experiments are manual verification.
+- Preserve applied migrations and their history. Resource relocation changes deployment metadata, not migration contents.
+- Keep credentials, private profiles and provider payloads out of commits and application logs. Preserve shared dependency caches; remove generated artifacts only after confirming they are unused.

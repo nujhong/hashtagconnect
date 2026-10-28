@@ -1,6 +1,6 @@
 import { sql, type DrizzleD1Database } from "void/db";
 import { personStates, postStates } from "~/db/schema";
-import type { GuestDecision } from "~/src/guest";
+import type { GuestDecision } from "~/shared/people";
 
 type Database = DrizzleD1Database<typeof import("~/db/schema")>;
 

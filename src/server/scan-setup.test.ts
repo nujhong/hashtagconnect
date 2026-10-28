@@ -23,5 +23,5 @@ test("readiness needs model configuration and a bio, never an X bearer token", (
   );
   const setup = scanSetup(configured);
   assert.equal(setup.status, "ready");
-  if (setup.status === "ready") assert.deepEqual(setup.jev, config);
+  if (setup.status === "ready") assert.deepEqual(setup.inference, config);
 });

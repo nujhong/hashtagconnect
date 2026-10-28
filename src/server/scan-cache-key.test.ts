@@ -1,7 +1,7 @@
 import { test } from "vite-plus/test";
 import assert from "node:assert/strict";
 import { scanInputHash } from "./scan-cache-key.ts";
-import type { ScanEvidence } from "~/src/scan-contract.ts";
+import type { ScanEvidence } from "~/shared/scan-contract.ts";
 const evidence: ScanEvidence = {
   viewer: { bio: "I make ceramics.", username: "potter" },
   post: { id: "1234", html: "<p>Looking to connect with potters. #connect</p>" },

@@ -1,10 +1,14 @@
 import { and, eq, type DrizzleD1Database } from "void/db";
-import { viewerContext } from "../../db/schema.ts";
-import { bioProjectLinks, type ProjectDraft, type ProjectImport } from "../project-profile.ts";
+import { viewerContext } from "../db/schema.ts";
+import {
+  bioProjectLinks,
+  type ProjectDraft,
+  type ProjectImport,
+} from "../shared/project-profile.ts";
 import { BrowserRunBudgetError } from "./browser-run-budget.ts";
 import { ProjectReadError } from "./project-profile.ts";
 
-type Database = DrizzleD1Database<typeof import("../../db/schema.ts")>;
+type Database = DrizzleD1Database<typeof import("../db/schema.ts")>;
 export type ProjectImportMessage = { userId: string; url: string; startedAt: number };
 
 /** Initialize a private profile once after OAuth. Reserve before publishing; existing contexts are never re-imported. */
