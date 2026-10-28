@@ -10,11 +10,11 @@ const page =
   "# Wheelhouse\nWheelhouse helps ceramic artists organize workshops and share kiln schedules. It is designed for community pottery studios.";
 const excerpt = "Wheelhouse helps ceramic artists organize workshops and share kiln schedules.";
 const summary = "A project for ceramic artists to organize workshops and share kiln schedules.";
-const modelResponse = (draft: unknown, finishReason = "STOP") =>
+const modelResponse = (draft: unknown, finishReason = "stop") =>
   Response.json({
     success: true,
     result: {
-      candidates: [{ content: { parts: [{ text: JSON.stringify(draft) }] }, finishReason }],
+      choices: [{ message: { content: JSON.stringify(draft) }, finish_reason: finishReason }],
     },
   });
 
@@ -35,11 +35,13 @@ test("one native Browser Run read creates a bounded, source-backed preview throu
     "https://wheelhouse.example",
     async (url, init) => {
       calls++;
-      assert.equal(url, "https://api.cloudflare.com/client/v4/accounts/a/ai/run");
+      assert.equal(
+        url,
+        "https://api.cloudflare.com/client/v4/accounts/a/ai/run/@cf/google/gemma-4-26b-a4b-it",
+      );
       const body = JSON.parse(String(init?.body));
-      assert.equal(body.model, "google/gemini-2.5-flash-lite");
-      assert.equal(JSON.parse(body.input.contents[0].parts[0].text).page.length, 20_000);
-      assert.equal(body.input.generationConfig.responseMimeType, "application/json");
+      assert.equal(JSON.parse(body.messages[1].content).page.length, 20_000);
+      assert.equal(body.response_format.type, "json_schema");
       assert.equal(new Headers(init?.headers).get("cf-aig-gateway-id"), "g");
       return modelResponse({
         summary,
@@ -81,7 +83,7 @@ test("invented excerpts, empty descriptions, truncated and malformed generations
   for (const response of [
     modelResponse({ summary, excerpt: "A fabricated claim that was not in the supplied page." }),
     modelResponse({ summary: "", excerpt: "" }),
-    modelResponse({ summary, excerpt }, "MAX_TOKENS"),
+    modelResponse({ summary, excerpt }, "length"),
     Response.json({ success: false }),
     new Response("token private diagnostics", { status: 403 }),
   ]) {

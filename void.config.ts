@@ -1,6 +1,7 @@
 import { defineConfig } from "void/config";
 
 export default defineConfig({
+  sourceDir: "src",
   target: "cloudflare",
   worker: {
     compatibility_date: "2026-10-25",
@@ -11,7 +12,7 @@ export default defineConfig({
     workers_dev: true,
     preview_urls: true,
     routes: [],
-    account_id: "21f45a2a8793aab5564e155efbee03fb",
+    account_id: "ac6ec0b998d8eb9a92746d8dd276bdf0",
     browser: { binding: "BROWSER", remote: true },
     observability: { enabled: true, traces: { enabled: true } },
   },
@@ -36,7 +37,7 @@ export default defineConfig({
         property: "og:description",
         content: "Meet people interested in what you share, create or sell.",
       },
-      { property: "og:image", content: "https://hashtagconnect.kinetics.workers.dev/og.png" },
+      { property: "og:image", content: "https://hashtagconnect.nujhong.workers.dev/og.png" },
       { property: "og:image:width", content: "1200" },
       { property: "og:image:height", content: "630" },
       {

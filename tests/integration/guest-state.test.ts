@@ -4,7 +4,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { Miniflare, convertV4MiniflareOptions } from "miniflare";
 import { drizzle } from "drizzle-orm/d1";
 import * as schema from "~/db/schema.ts";
-import { mergeGuestState } from "~/src/server/guest-state.ts";
+import { mergeGuestState } from "~/server/guest-state.ts";
 
 test("guest import resolves authors server-side, preserves account decisions, and safely retries", async () => {
   const mf = new Miniflare(
@@ -16,7 +16,7 @@ test("guest import resolves authors server-side, preserves account decisions, an
   );
   try {
     const binding = await mf.getD1Database("DB");
-    const dir = new URL("../../db/migrations/", import.meta.url);
+    const dir = new URL("../../src/db/migrations/", import.meta.url);
     for (const file of readdirSync(dir)
       .filter((file) => file.endsWith(".sql"))
       .sort()) {

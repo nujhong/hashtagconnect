@@ -1,9 +1,9 @@
-import type { ScanEvidence, ScanPhrase } from "~/src/scan-contract.ts";
+import type { ScanEvidence, ScanPhrase } from "~/shared/scan-contract.ts";
 
 /**
- * The viewer's own words, split into short phrases Jev can check one at a time and the UI can quote back.
+ * The viewer's own words, split into short phrases Clef can check one at a time and the UI can quote back.
  * Deterministic and model-free, on the bio as X shows it (links as their display text, see x-oauth.ts); hashtags keep their word.
- * Keep every candidate from the length-bounded profile inputs; Jev selects the strongest three after scoring.
+ * Keep every candidate from the length-bounded profile inputs; Clef selects the strongest three after scoring.
  * ponytail: splits on punctuation and "and"/"&"; a smarter splitter if long prose bios produce poor phrases.
  */
 export function profilePhrases(

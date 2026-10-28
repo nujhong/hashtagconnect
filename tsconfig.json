@@ -12,26 +12,13 @@
     "jsx": "react-jsx",
     "paths": {
       "void/db": ["./.void/db.d.ts"],
-      "@schema": ["./db/schema.ts"],
-      "@schema/*": ["./db/schema/*"],
+      "@schema": ["./src/db/schema.ts"],
+      "@schema/*": ["./src/db/schema/*"],
       "void/routes": ["./.void/routes.d.ts"],
       "void/queues": ["./.void/queues.d.ts"],
-      "~/*": ["./*"]
+      "~/*": ["./src/*"]
     },
     "noEmit": true
   },
-  "include": [
-    "src",
-    "tests",
-    "pages",
-    "routes",
-    "middleware",
-    "crons",
-    "queues",
-    "db",
-    "auth.ts",
-    "env.ts",
-    "void.config.ts",
-    "vite.config.ts"
-  ]
+  "include": ["src", "tests", "void.config.ts", "vite.config.ts"]
 }

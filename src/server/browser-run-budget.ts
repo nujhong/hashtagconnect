@@ -1,10 +1,10 @@
 import { lt, sql, type DrizzleD1Database } from "void/db";
-import { browserRunUsage } from "../../db/schema.ts";
+import { browserRunUsage } from "../db/schema.ts";
 
-type Database = DrizzleD1Database<typeof import("../../db/schema.ts")>;
+type Database = DrizzleD1Database<typeof import("../db/schema.ts")>;
 
 // 5,000 one-minute calls at $0.09/hour budget $7.50 against the US$10 target, ignoring free hours.
-// Screenshot stage timeouts total 42s; project reads total 20s. Revisit if either grows.
+// Embed load/selector waits total 27s; project reads total 20s. Revisit the one-minute estimate if these grow.
 export const BROWSER_RUN_MONTHLY_LIMIT = 5_000;
 
 export class BrowserRunBudgetError extends Error {

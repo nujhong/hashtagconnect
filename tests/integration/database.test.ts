@@ -5,7 +5,7 @@ import { readFileSync, readdirSync } from "node:fs";
 
 test("migrations create an empty application database", () => {
   const db = new DatabaseSync(":memory:");
-  const dir = new URL("../../db/migrations/", import.meta.url);
+  const dir = new URL("../../src/db/migrations/", import.meta.url);
   const files = readdirSync(dir).filter((file) => file.endsWith(".sql"));
   for (const file of files.sort()) db.exec(readFileSync(new URL(file, dir), "utf8"));
   const tables = db
@@ -33,7 +33,7 @@ test("migrations create an empty application database", () => {
 
 test("saved people survive source-post deletion and profile renames", () => {
   const db = new DatabaseSync(":memory:");
-  const dir = new URL("../../db/migrations/", import.meta.url);
+  const dir = new URL("../../src/db/migrations/", import.meta.url);
   for (const file of readdirSync(dir)
     .filter((file) => file.endsWith(".sql"))
     .sort())
@@ -64,7 +64,7 @@ test("saved people survive source-post deletion and profile renames", () => {
 test("saved results allow separate viewers and reject duplicates for the same viewer/post", () => {
   const db = new DatabaseSync(":memory:");
   try {
-    const dir = new URL("../../db/migrations/", import.meta.url);
+    const dir = new URL("../../src/db/migrations/", import.meta.url);
     const files = readdirSync(dir)
       .filter((file) => file.endsWith(".sql"))
       .sort();

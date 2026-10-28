@@ -1,7 +1,7 @@
 import { test } from "vite-plus/test";
 import assert from "node:assert/strict";
-import { jevInput, evaluateProfiles } from "~/src/server/jev.ts";
-import { scanInputHash } from "~/src/server/scan-cache-key.ts";
+import { clefInput, evaluateProfiles } from "~/server/clef.ts";
+import { scanInputHash } from "~/server/scan-cache-key.ts";
 const config = { accountId: "a", gatewayId: "g", apiToken: "test-ai" };
 const summary = "A project for ceramic artists to organize workshops and share kiln schedules.";
 test("confirmed project context supplements an empty bio, changes the scan hash, and retains its source", async () => {
@@ -13,7 +13,7 @@ test("confirmed project context supplements an empty bio, changes the scan hash,
     },
     post: { id: "1234", html: "<p>Looking for people making pottery tools.</p>" },
   };
-  const input = jevInput(evidence);
+  const input = clefInput(evidence);
   assert.equal(input.state.viewer_bio, "");
   assert.equal(input.state.viewer_project, summary);
   assert.notEqual(
@@ -36,28 +36,26 @@ test("confirmed project context supplements an empty bio, changes the scan hash,
     return Response.json({
       success: true,
       result: {
-        state: "Completed",
-        result: {
-          model: "typesafe/jev",
-          answers: {
-            explanation: {
-              type: "choice",
-              choice: "interest",
-              confidence: 0.9,
-              probabilities: { interest: 0.9, work: 0.1, little: 0 },
-            },
-            relevance: {
-              type: "score",
-              score: 3,
-              confidence: 0.9,
-              probabilities: { "0": 0, "1": 0, "2": 0, "3": 1 },
-            },
-            ...Object.fromEntries(
-              ["bio_has_detail", "post_has_detail", "shared_interest", "related_work"].map(
-                (key) => [key, { type: "noul", noul: 0.9 }],
-              ),
-            ),
+        model: "typesafe/jev",
+        answers: {
+          explanation: {
+            type: "choice",
+            choice: "interest",
+            confidence: 0.9,
+            probabilities: { interest: 0.9, work: 0.1, little: 0 },
           },
+          relevance: {
+            type: "score",
+            score: 3,
+            confidence: 0.9,
+            probabilities: { "0": 0, "1": 0, "2": 0, "3": 1 },
+          },
+          ...Object.fromEntries(
+            ["bio_has_detail", "post_has_detail", "shared_interest", "related_work"].map((key) => [
+              key,
+              { type: "noul", noul: 0.9 },
+            ]),
+          ),
         },
       },
     });

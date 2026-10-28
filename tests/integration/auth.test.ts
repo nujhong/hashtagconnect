@@ -2,7 +2,7 @@ import { test } from "vite-plus/test";
 import assert from "node:assert/strict";
 import { betterAuth } from "better-auth";
 import configureAuth from "~/auth.ts";
-import { bioProjectAfterOAuth } from "~/src/server/oauth-profile.ts";
+import { bioProjectAfterOAuth } from "~/server/oauth-profile.ts";
 
 test("OAuth persists and refreshes provider fields while direct profile edits stay disabled", async () => {
   assert.equal(typeof configureAuth, "function");

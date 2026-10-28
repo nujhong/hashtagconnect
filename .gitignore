@@ -13,3 +13,5 @@ dist
 /outputs/
 /public/design-options.html
 *.log
+
+.pnpm-store/

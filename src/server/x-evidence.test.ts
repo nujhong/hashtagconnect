@@ -1,7 +1,7 @@
 import { test } from "vite-plus/test";
 import assert from "node:assert/strict";
 import { loadPublicEvidence } from "./x-evidence.ts";
-import type { ScanEvidence } from "~/src/scan-contract.ts";
+import type { ScanEvidence } from "~/shared/scan-contract.ts";
 const evidence: ScanEvidence = {
   viewer: { bio: "Building desktop apps and design tools.", username: "viewer" },
   post: {

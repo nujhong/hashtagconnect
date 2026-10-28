@@ -9,9 +9,9 @@ import {
   enqueueBioProject,
   importBioProject,
   type ProjectImportMessage,
-} from "~/src/server/project-from-bio.ts";
-import { ProjectReadError } from "~/src/server/project-profile.ts";
-import { projectImportProgress } from "~/src/project-profile.ts";
+} from "~/server/project-from-bio.ts";
+import { ProjectReadError } from "~/server/project-profile.ts";
+import { projectImportProgress } from "~/shared/project-profile.ts";
 
 const draft = {
   url: "https://project.example/",
@@ -30,7 +30,7 @@ test("OAuth queues once; the consumer imports independently of the client and re
   );
   try {
     const binding = await mf.getD1Database("DB");
-    const dir = new URL("../../db/migrations/", import.meta.url);
+    const dir = new URL("../../src/db/migrations/", import.meta.url);
     for (const file of readdirSync(dir)
       .filter((f) => f.endsWith(".sql"))
       .sort()) {
